@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apache Kafka | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>📨 Apache Kafka</h1>
+
+        <div class="note">Kafka — распределённый брокер сообщений. Используется для асинхронного общения между сервисами, потоковой обработки данных, event-driven архитектуры.</div>
+
+        <!-- Что такое -->
+        <h2>Что такое Kafka и зачем она нужна</h2>
+        <p><b>Проблема:</b> сервис A должен оповестить сервисы B, C, D о событии. Если вызывать их по HTTP — A ждёт ответа от всех. Если B упал — событие потеряется.</p>
+        <p><b>Решение:</b> Kafka — посредник. A отправляет сообщение в Kafka, и сразу свободен. B, C, D читают из Kafka в своём темпе. Если кто-то упал — сообщение не потеряется, обработает позже.</p>
+
+        <div class="answer-block">
+            Apache Kafka — это распределённый брокер сообщений и платформа для потоковой обработки данных. Гарантирует сохранность сообщений на диске, позволяет перечитывать старые сообщения и масштабируется горизонтально.
+        </div>
+
+        <!-- Основные понятия -->
+        <h2>Основные понятия</h2>
+        <table>
+            <tr><th>Термин</th><th>Аналогия</th><th>Что делает</th></tr>
+            <tr><td><b>Producer</b></td><td>Почтальон, отправляющий письмо</td><td>Отправляет сообщения в топик</td></tr>
+            <tr><td><b>Consumer</b></td><td>Человек, проверяющий почтовый ящик</td><td>Читает сообщения из топика</td></tr>
+            <tr><td><b>Topic (топик)</b></td><td>Почтовый ящик / папка</td><td>Категория, куда пишут и откуда читают</td></tr>
+            <tr><td><b>Partition</b></td><td>Отделение в ящике</td><td>Часть топика для параллельной обработки</td></tr>
+            <tr><td><b>Broker</b></td><td>Почтовое отделение</td><td>Сервер Kafka (их обычно несколько)</td></tr>
+            <tr><td><b>Consumer Group</b></td><td>Группа людей, разбирающих почту</td><td>Потребители, делящие нагрузку</td></tr>
+            <tr><td><b>Offset</b></td><td>Закладка в книге</td><td>Позиция, до которой прочитали сообщения</td></tr>
+        </table>
+
+        <pre>Producer → Kafka Broker → Topic "orders"
+                              ├── Partition 0: [msg1, msg2, msg3...]
+                              ├── Partition 1: [msg4, msg5, msg6...]
+                              └── Partition 2: [msg7, msg8, msg9...]
+                                   ↓
+                              Consumer Group "order-processors"
+                              ├── Consumer 1 читает Partition 0
+                              ├── Consumer 2 читает Partition 1
+                              └── Consumer 3 читает Partition 2</pre>
+
+        <!-- Гарантии -->
+        <h2>Гарантии доставки</h2>
+        <table>
+            <tr><th>Уровень</th><th>Описание</th></tr>
+            <tr><td><b>At most once</b></td><td>Сообщение может потеряться, но не дублируется</td></tr>
+            <tr><td><b>At least once</b></td><td>Сообщение точно дойдёт, но может дублироваться (по умолчанию)</td></tr>
+            <tr><td><b>Exactly once</b></td><td>Сообщение дойдёт ровно один раз (идемпотентный producer + транзакции)</td></tr>
+        </table>
+
+        <!-- Spring + Kafka -->
+        <h2>Spring Boot + Kafka</h2>
+        <h3>Зависимость:</h3>
+        <pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.kafka&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-kafka&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre>
+
+        <h3>Конфигурация (application.properties):</h3>
+        <pre>spring.kafka.bootstrap-servers=localhost:9092
+spring.kafka.consumer.group-id=order-processors
+spring.kafka.consumer.auto-offset-reset=earliest</pre>
+
+        <h3>Producer (отправка сообщений):</h3>
+        <pre>@Service
+public class OrderProducer {
+
+    @Autowired
+    private KafkaTemplate&lt;String, OrderEvent&gt; kafka;
+
+    public void sendOrderCreated(Order order) {
+        OrderEvent event = new OrderEvent(order.getId(), order.getUserId());
+        kafka.send("order-created", event);
+        // Всё! Сообщение ушло, метод сразу завершился
+    }
+}</pre>
+
+        <h3>Consumer (чтение сообщений):</h3>
+        <pre>@Service
+public class OrderConsumer {
+
+    @KafkaListener(topics = "order-created", groupId = "email-service")
+    public void handleOrderCreated(OrderEvent event) {
+        // Отправляем email пользователю
+        emailService.sendOrderConfirmation(event.getUserId());
+        // Если упадёт — Kafka повторит (at least once)
+    }
+}</pre>
+
+        <!-- Kafka vs RabbitMQ -->
+        <h2>Kafka vs RabbitMQ</h2>
+        <table>
+            <tr><th></th><th>Kafka</th><th>RabbitMQ</th></tr>
+            <tr><td>Хранение</td><td>На диске (лог), можно перечитать старые</td><td>В памяти, после доставки удаляется</td></tr>
+            <tr><td>Скорость</td><td>Миллионы сообщений/сек</td><td>Десятки тысяч/сек</td></tr>
+            <tr><td>Масштабирование</td><td>Горизонтальное (partitions)</td><td>Сложнее</td></tr>
+            <tr><td>Маршрутизация</td><td>Простая (топики)</td><td>Сложная (exchanges, bindings)</td></tr>
+            <tr><td>Когда</td><td>Потоковая обработка, event sourcing, логи</td><td>RPC, фоновые задачи, уведомления</td></tr>
+        </table>
+
+        <!-- Kafka в Docker -->
+        <h2>Kafka в Docker</h2>
+        <pre>docker-compose.yml:
+
+version: '3.8'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper</pre>
+
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Зачем нужна Kafka? Чем отличается от RabbitMQ?</li>
+            <li>Что такое Topic, Partition, Offset, Consumer Group?</li>
+            <li>Какие гарантии доставки есть в Kafka?</li>
+            <li>Как отправить сообщение в Kafka из Spring Boot?</li>
+            <li>Почему сообщения в Kafka не удаляются после прочтения?</li>
+        </ol>
+
+    </main>
+    <footer class="footer"><p>📱 Java Mentor · Apache Kafka</p></footer>
+    <script src="../js/script.js"></script>
+</body>
+</html>

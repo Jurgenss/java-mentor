@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ООП — 4 принципа | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🏛 ООП — 4 принципа</h1>
+
+        <div class="note">Объектно-Ориентированное Программирование — основа Java. На собеседовании спросят 100%.</div>
+
+        <!-- Таблица принципов -->
+        <h2>Четыре принципа ООП</h2>
+        <table>
+            <tr><th>Принцип</th><th>Суть</th><th>Реализация в Java</th></tr>
+            <tr>
+                <td><b>Инкапсуляция</b></td>
+                <td>Скрытие внутреннего состояния, защита от некорректного использования</td>
+                <td><code>private</code> поля + публичные геттеры/сеттеры с проверками</td>
+            </tr>
+            <tr>
+                <td><b>Наследование</b></td>
+                <td>Создание нового класса на основе существующего, отношение "is-a"</td>
+                <td><code>extends</code> (только 1 класс). Все классы неявно от <code>Object</code></td>
+            </tr>
+            <tr>
+                <td><b>Полиморфизм</b></td>
+                <td>Способность объекта вести себя по-разному в зависимости от реального типа</td>
+                <td>Статический (overloading) + динамический (overriding) + ссылки родительского типа</td>
+            </tr>
+            <tr>
+                <td><b>Абстракция</b></td>
+                <td>Выделение общего поведения, сокрытие деталей реализации</td>
+                <td><code>abstract class</code>, <code>interface</code></td>
+            </tr>
+        </table>
+
+        <!-- Инкапсуляция -->
+        <h2>1. Инкапсуляция</h2>
+        <p>Скрываем поля от прямого доступа извне. Доступ только через методы с проверками.</p>
+
+        <pre>public class Account {
+    private double balance; // скрыто!
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void deposit(double amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Сумма должна быть положительной!");
+        }
+        balance += amount;
+    }
+
+    public void withdraw(double amount) {
+        if (amount > balance) {
+            throw new IllegalArgumentException("Недостаточно средств!");
+        }
+        balance -= amount;
+    }
+}</pre>
+
+        <p><b>Что даёт:</b> нельзя напрямую сделать <code>account.balance = -100000</code>. Только через методы, которые проверяют корректность.</p>
+
+        <div class="answer-block">
+            <b>Инкапсуляция</b> — это сокрытие внутреннего состояния объекта и предоставление доступа только через публичные методы. Реализуется через <code>private</code> поля + геттеры/сеттеры с проверками. Позволяет контролировать корректность данных.
+        </div>
+
+        <!-- Наследование -->
+        <h2>2. Наследование</h2>
+        <p>Класс-потомок получает поля и методы класса-родителя. В Java — только <b>один</b> родитель через <code>extends</code>.</p>
+
+        <pre>// Родитель
+public class Animal {
+    protected String name;
+
+    public Animal(String name) {
+        this.name = name;
+    }
+
+    public void eat() {
+        System.out.println(name + " ест");
+    }
+}
+
+// Потомок
+public class Dog extends Animal {
+    public Dog(String name) {
+        super(name); // вызов конструктора родителя — обязательно!
+    }
+
+    public void bark() {
+        System.out.println(name + " гавкает");
+    }
+}
+
+// Использование
+Dog dog = new Dog("Шарик");
+dog.eat();  // метод родителя
+dog.bark(); // свой метод</pre>
+
+        <p><b>Ограничения:</b></p>
+        <ul>
+            <li>Множественное наследование классов запрещено (только 1 <code>extends</code>)</li>
+            <li>Конструкторы не наследуются, но вызываются через <code>super()</code></li>
+            <li><code>final</code> класс нельзя наследовать (например, <code>String</code>)</li>
+            <li>Все классы неявно наследуются от <code>Object</code></li>
+        </ul>
+
+        <div class="answer-block">
+            <b>Наследование</b> — механизм, при котором класс-потомок получает поля и методы класса-родителя. В Java запрещено множественное наследование классов, но можно реализовать много интерфейсов через <code>implements</code>. Конструкторы не наследуются, но вызываются через <code>super()</code>.
+        </div>
+
+        <!-- Полиморфизм -->
+        <h2>3. Полиморфизм</h2>
+        <p>Два вида: <b>перегрузка</b> (overloading) и <b>переопределение</b> (overriding).</p>
+
+        <h3>Overloading (перегрузка) — статический полиморфизм</h3>
+        <p>Один метод с разными параметрами в одном классе. Решается на этапе компиляции.</p>
+        <pre>public class Calculator {
+    public int sum(int a, int b) {
+        return a + b;
+    }
+
+    public double sum(double a, double b) {
+        return a + b;
+    }
+
+    public int sum(int a, int b, int c) {
+        return a + b + c;
+    }
+}</pre>
+        <p>Компилятор сам выбирает нужный метод по параметрам вызова.</p>
+
+        <h3>Overriding (переопределение) — динамический полиморфизм</h3>
+        <p>Дочерний класс меняет поведение метода родителя. Решается во время выполнения.</p>
+        <pre>public class Animal {
+    public void speak() {
+        System.out.println("Животное говорит");
+    }
+}
+
+public class Cat extends Animal {
+    @Override
+    public void speak() {
+        System.out.println("Мяу!");
+    }
+}
+
+public class Dog extends Animal {
+    @Override
+    public void speak() {
+        System.out.println("Гав!");
+    }
+}
+
+// Полиморфизм в действии:
+Animal[] animals = {new Cat(), new Dog(), new Animal()};
+for (Animal a : animals) {
+    a.speak(); // Мяу! Гав! Животное говорит
+}
+// Вызывается метод реального типа объекта, а не тип ссылки!</pre>
+
+        <table>
+            <tr><th></th><th>Overloading</th><th>Overriding</th></tr>
+            <tr><td>Когда решается</td><td>Компиляция</td><td>Выполнение (JVM)</td></tr>
+            <tr><td>Где</td><td>В одном классе</td><td>Родитель-наследник</td></tr>
+            <tr><td>Сигнатура</td><td>Разные параметры</td><td>Одинаковая</td></tr>
+            <tr><td>Аннотация</td><td>Не нужна</td><td><code>@Override</code></td></tr>
+            <tr><td>Модификатор доступа</td><td>Любой</td><td>Нельзя сужать</td></tr>
+        </table>
+
+        <div class="answer-block">
+            <b>Полиморфизм</b> бывает двух видов: статический (overloading — перегрузка методов, решается при компиляции) и динамический (overriding — переопределение методов, решается во время выполнения по реальному типу объекта). Пример: ссылка <code>Animal a = new Dog(); a.speak();</code> вызовет метод <code>Dog</code>.
+        </div>
+
+        <!-- Абстракция -->
+        <h2>4. Абстракция</h2>
+        <p>Выделяем общее поведение, скрываем детали. Реализуется через <code>abstract class</code> и <code>interface</code>.</p>
+
+        <pre>// Интерфейс — контракт (ЧТО делать)
+public interface Drawable {
+    void draw(); // абстрактный метод — нет тела
+}
+
+// Абстрактный класс — общая реализация
+public abstract class Shape {
+    protected String color;
+
+    public Shape(String color) {
+        this.color = color;
+    }
+
+    public abstract double getArea(); // абстрактный — без тела
+
+    public void printColor() {       // обычный — с телом
+        System.out.println("Цвет: " + color);
+    }
+}
+
+// Конкретный класс
+public class Circle extends Shape implements Drawable {
+    private double radius;
+
+    public Circle(String color, double radius) {
+        super(color);
+        this.radius = radius;
+    }
+
+    @Override
+    public double getArea() {
+        return Math.PI * radius * radius;
+    }
+
+    @Override
+    public void draw() {
+        System.out.println("Рисуем круг цвета " + color);
+    }
+}</pre>
+
+        <div class="answer-block">
+            <b>Абстракция</b> — выделение общего поведения и сокрытие деталей. Реализуется через <code>abstract class</code> (может содержать состояние и частичную реализацию) и <code>interface</code> (только контракт, что делать).
+        </div>
+                <!-- Абстрактный класс: подробно -->
+        <h2>🔍 Абстрактный класс — когда и зачем</h2>
+        <p>Абстрактный класс — это "полуфабрикат": часть логики общая для всех наследников, часть — уникальная.</p>
+
+        <h3>Когда применять:</h3>
+        <ul>
+            <li>✅ Есть <b>общее состояние</b> (поля) для всех наследников</li>
+            <li>✅ Есть <b>общая реализация</b> методов</li>
+            <li>✅ Хотим <b>запретить создавать экземпляр</b> родителя (нет смысла создавать "просто животное")</li>
+            <li>❌ Не подходит, если нужно только поведение без состояния — тогда интерфейс</li>
+        </ul>
+
+        <h3>Наглядный пример: платёжная система</h3>
+        <pre>// Абстрактный класс — общая логика для всех платежей
+public abstract class Payment {
+    protected String orderId;
+    protected BigDecimal amount;
+    protected String status;
+
+    public Payment(String orderId, BigDecimal amount) {
+        this.orderId = orderId;
+        this.amount = amount;
+        this.status = "NEW";
+    }
+
+    // Общий метод с логикой — одинаков для всех
+    public void validate() {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Сумма должна быть > 0");
+        }
+        System.out.println("Платёж " + orderId + " проверен");
+    }
+
+    // Абстрактный метод — каждый платёж выполняет по-своему
+    public abstract void process();
+
+    // Общий метод — логика едина
+    public void setStatus(String status) {
+        this.status = status;
+        System.out.println("Статус платежа " + orderId + ": " + status);
+    }
+}
+
+// Конкретная реализация — карта
+public class CardPayment extends Payment {
+    private String cardNumber;
+
+    public CardPayment(String orderId, BigDecimal amount, String cardNumber) {
+        super(orderId, amount); // обязательно вызываем конструктор родителя!
+        this.cardNumber = cardNumber;
+    }
+
+    @Override
+    public void process() {
+        validate();                              // общий метод
+        // Специфичная логика для карты
+        System.out.println("Списываем с карты " + maskCard(cardNumber));
+        setStatus("PAID");                       // общий метод
+    }
+
+    private String maskCard(String card) {
+        return "****" + card.substring(card.length() - 4);
+    }
+}
+
+// Конкретная реализация — QR-код
+public class QrPayment extends Payment {
+    private String qrCode;
+
+    public QrPayment(String orderId, BigDecimal amount, String qrCode) {
+        super(orderId, amount);
+        this.qrCode = qrCode;
+    }
+
+    @Override
+    public void process() {
+        validate();                              // та же проверка
+        System.out.println("Сканируем QR: " + qrCode);
+        setStatus("PAID");
+    }
+}
+
+// Использование
+Payment cardPay = new CardPayment("ORD-001", new BigDecimal("1500"), "4111222233334444");
+cardPay.process();
+// Вывод:
+// Платёж ORD-001 проверен
+// Списываем с карты ****4444
+// Статус платежа ORD-001: PAID
+
+Payment qrPay = new QrPayment("ORD-002", new BigDecimal("500"), "QR-ABC123");
+qrPay.process();
+// Вывод:
+// Платёж ORD-002 проверен
+// Сканируем QR: QR-ABC123
+// Статус платежа ORD-002: PAID</pre>
+
+        <h3>Что даёт абстрактный класс:</h3>
+        <table>
+            <tr><th>Проблема</th><th>Без абстрактного класса</th><th>С абстрактным классом</th></tr>
+            <tr>
+                <td>Дублирование кода</td>
+                <td><code>validate()</code> и <code>setStatus()</code> копируем в каждый класс</td>
+                <td>Пишем один раз в родителе</td>
+            </tr>
+            <tr>
+                <td>Забытая проверка</td>
+                <td>Можно забыть вызвать <code>validate()</code> в новом типе платежа</td>
+                <td><code>process()</code> обязан быть реализован, а в нём уже вызываем <code>validate()</code></td>
+            </tr>
+            <tr>
+                <td>Создание "неправильного" объекта</td>
+                <td><code>new Payment()</code> — бессмысленно</td>
+                <td><code>Payment</code> абстрактный — создать нельзя, только конкретные</td>
+            </tr>
+        </table>
+
+        <h3>Абстрактный класс vs Интерфейс:</h3>
+        <table>
+            <tr><th>Характеристика</th><th>Абстрактный класс</th><th>Интерфейс</th></tr>
+            <tr><td>Ключевое слово</td><td><code>abstract class</code></td><td><code>interface</code></td></tr>
+            <tr><td>Наследование</td><td><code>extends</code> (только 1)</td><td><code>implements</code> (много)</td></tr>
+            <tr><td>Поля</td><td>Любые (могут быть не final)</td><td>Только <code>public static final</code></td></tr>
+            <tr><td>Методы с телом</td><td>✅ Обычные методы</td><td>✅ <code>default</code> (Java 8+)</td></tr>
+            <tr><td>Конструктор</td><td>✅ Есть (вызывается через <code>super()</code>)</td><td>❌ Нет</td></tr>
+            <tr><td>Когда использовать</td><td>Общее состояние + общая логика</td><td>Только контракт (что делать)</td></tr>
+        </table>
+
+        <div class="answer-block">
+            <b>Когда использовать абстрактный класс?</b> Когда есть общее состояние (поля, которые нужны всем наследникам) и общая реализация методов. Например, в платёжной системе: у всех платежей есть <code>orderId</code>, <code>amount</code>, <code>status</code> и метод <code>validate()</code>. Выносим их в абстрактный <code>Payment</code>, а каждый конкретный платёж реализует только <code>process()</code> по-своему. Если нужно только поведение без состояния — берём интерфейс.
+        </div>
+        <!-- Самопроверка -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Чем отличается перегрузка от переопределения?</li>
+            <li>Почему нельзя наследовать два класса?</li>
+            <li>Что будет, если вызвать статический метод через ссылку родительского типа?</li>
+            <li>Можно ли переопределить <code>private</code> метод?</li>
+            <li>Зачем нужны геттеры и сеттеры, если можно сделать поле <code>public</code>?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · ООП · Открывай с телефона</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

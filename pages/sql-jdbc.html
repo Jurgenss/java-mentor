@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL и JDBC | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🗄 SQL и JDBC</h1>
+
+        <div class="note">На собесе на джуна по SQL спросят JOIN, WHERE vs HAVING и основы JDBC. Разбираем всё по порядку.</div>
+
+        <!-- JOIN -->
+        <h2>SQL JOIN — соединение таблиц</h2>
+        <table>
+            <tr><th>Тип JOIN</th><th>Что возвращает</th><th>Визуально</th></tr>
+            <tr>
+                <td><code>INNER JOIN</code></td>
+                <td>Только строки с совпадениями в обеих таблицах</td>
+                <td>Пересечение двух кругов</td>
+            </tr>
+            <tr>
+                <td><code>LEFT JOIN</code></td>
+                <td>Все строки из левой таблицы + совпадения из правой (NULL если нет)</td>
+                <td>Весь левый круг</td>
+            </tr>
+            <tr>
+                <td><code>RIGHT JOIN</code></td>
+                <td>Все строки из правой + совпадения из левой</td>
+                <td>Весь правый круг</td>
+            </tr>
+            <tr>
+                <td><code>FULL JOIN</code></td>
+                <td>Все строки из обеих таблиц</td>
+                <td>Оба круга целиком</td>
+            </tr>
+        </table>
+
+        <h3>Пример:</h3>
+        <pre>-- Таблицы
+users:                       orders:
+id | name                   id | user_id | amount
+---+-------                 ---+---------+-------
+1  | Иван                   1  | 1       | 100
+2  | Мария                  2  | 1       | 200
+3  | Пётр                   3  | 3       | 300
+
+-- INNER JOIN — только те, у кого есть заказы
+SELECT u.name, o.amount
+FROM users u
+INNER JOIN orders o ON u.id = o.user_id;
+-- Иван | 100
+-- Иван | 200
+-- Пётр  | 300
+-- (Марии нет — у неё нет заказов)
+
+-- LEFT JOIN — все пользователи, даже без заказов
+SELECT u.name, o.amount
+FROM users u
+LEFT JOIN orders o ON u.id = o.user_id;
+-- Иван  | 100
+-- Иван  | 200
+-- Мария | NULL
+-- Пётр  | 300</pre>
+
+        <!-- WHERE vs HAVING -->
+        <h2>WHERE vs HAVING</h2>
+        <table>
+            <tr><th></th><th><code>WHERE</code></th><th><code>HAVING</code></th></tr>
+            <tr><td>Когда применяется</td><td>ДО группировки (GROUP BY)</td><td>ПОСЛЕ группировки</td></tr>
+            <tr><td>Что фильтрует</td><td>Отдельные строки</td><td>Группы (агрегаты)</td></tr>
+            <tr><td>Агрегатные функции</td><td>❌ Нельзя</td><td>✅ Можно (SUM, AVG, COUNT...)</td></tr>
+        </table>
+
+        <pre>-- WHERE — до группировки
+SELECT department, COUNT(*)
+FROM employees
+WHERE salary > 50000          -- фильтруем строки
+GROUP BY department;
+
+-- HAVING — после группировки
+SELECT department, COUNT(*)
+FROM employees
+GROUP BY department
+HAVING COUNT(*) > 5;           -- фильтруем группы
+
+-- Можно вместе
+SELECT department, AVG(salary) as avg_sal
+FROM employees
+WHERE hire_date > '2020-01-01'  -- сначала фильтр строк
+GROUP BY department
+HAVING AVG(salary) > 70000;     -- потом фильтр групп</pre>
+
+        <!-- JDBC -->
+        <h2>JDBC — 5 шагов</h2>
+        <ol>
+            <li><b>Загрузить драйвер</b> (в современных версиях автоматически через ServiceLoader)</li>
+            <li><b>Создать соединение:</b> <code>DriverManager.getConnection(url, user, password)</code></li>
+            <li><b>Создать запрос:</b> <code>Statement</code> / <code>PreparedStatement</code></li>
+            <li><b>Выполнить:</b> <code>executeQuery()</code> (SELECT) или <code>executeUpdate()</code> (INSERT/UPDATE/DELETE)</li>
+            <li><b>Закрыть ресурсы:</b> try-with-resources</li>
+        </ol>
+
+        <h3>Полный пример:</h3>
+        <pre>String url = "jdbc:postgresql://localhost:5432/bank";
+String user = "postgres";
+String password = "secret";
+
+try (Connection conn = DriverManager.getConnection(url, user, password);
+     PreparedStatement stmt = conn.prepareStatement(
+         "SELECT id, name, balance FROM accounts WHERE balance > ?"
+     )) {
+
+    stmt.setDouble(1, 1000.00);
+
+    try (ResultSet rs = stmt.executeQuery()) {
+        while (rs.next()) {
+            int id = rs.getInt("id");
+            String name = rs.getString("name");
+            double balance = rs.getDouble("balance");
+            System.out.printf("%d | %s | %.2f%n", id, name, balance);
+        }
+    }
+
+} catch (SQLException e) {
+    e.printStackTrace();
+}</pre>
+
+        <!-- Statement vs PreparedStatement -->
+        <h2>Statement vs PreparedStatement</h2>
+        <table>
+            <tr><th></th><th>Statement</th><th>PreparedStatement</th></tr>
+            <tr><td>SQL-инъекции</td><td>❌ Уязвим</td><td>✅ Защищён</td></tr>
+            <tr><td>Скорость</td><td>Медленнее</td><td>Быстрее (предкомпиляция)</td></tr>
+            <tr><td>Параметры</td><td>Конкатенация строк</td><td><code>?</code> и <code>setXxx()</code></td></tr>
+            <tr><td>Читаемость</td><td>Хуже</td><td>Лучше</td></tr>
+        </table>
+
+        <h3>SQL-инъекция — почему Statement опасен:</h3>
+        <pre>// ❌ Опасно — Statement + конкатенация
+String name = "admin' OR '1'='1";
+Statement stmt = conn.createStatement();
+ResultSet rs = stmt.executeQuery(
+    "SELECT * FROM users WHERE name = '" + name + "'"
+);
+// Получится: WHERE name = 'admin' OR '1'='1' → вернёт ВСЕХ!
+
+// ✅ Безопасно — PreparedStatement
+String sql = "SELECT * FROM users WHERE name = ?";
+PreparedStatement stmt = conn.prepareStatement(sql);
+stmt.setString(1, name); // драйвер сам экранирует</pre>
+
+        <!-- executeQuery vs executeUpdate -->
+        <h2>executeQuery() vs executeUpdate()</h2>
+        <table>
+            <tr><th>Метод</th><th>Для чего</th><th>Возвращает</th></tr>
+            <tr><td><code>executeQuery()</code></td><td>SELECT</td><td><code>ResultSet</code></td></tr>
+            <tr><td><code>executeUpdate()</code></td><td>INSERT, UPDATE, DELETE, DDL</td><td><code>int</code> (сколько строк затронуто)</td></tr>
+            <tr><td><code>execute()</code></td><td>Любой запрос</td><td><code>boolean</code> (true = есть ResultSet)</td></tr>
+        </table>
+
+        <!-- Транзакции -->
+        <h2>Транзакции в JDBC</h2>
+        <p>Транзакция — набор операций, которые либо все выполняются, либо все откатываются (ACID).</p>
+
+        <h3>ACID:</h3>
+        <table>
+            <tr><th>Буква</th><th>Свойство</th><th>Значение</th></tr>
+            <tr><td>A</td><td>Atomicity</td><td>Всё или ничего</td></tr>
+            <tr><td>C</td><td>Consistency</td><td>Данные всегда корректны</td></tr>
+            <tr><td>I</td><td>Isolation</td><td>Транзакции не мешают друг другу</td></tr>
+            <tr><td>D</td><td>Durability</td><td>Результат сохраняется после сбоя</td></tr>
+        </table>
+
+        <pre>Connection conn = DriverManager.getConnection(url, user, password);
+try {
+    conn.setAutoCommit(false); // начало транзакции
+
+    // Снять со счёта
+    PreparedStatement stmt1 = conn.prepareStatement(
+        "UPDATE accounts SET balance = balance - ? WHERE id = ?");
+    stmt1.setDouble(1, 500.00);
+    stmt1.setInt(2, 1);
+    stmt1.executeUpdate();
+
+    // Зачислить на счёт
+    PreparedStatement stmt2 = conn.prepareStatement(
+        "UPDATE accounts SET balance = balance + ? WHERE id = ?");
+    stmt2.setDouble(1, 500.00);
+    stmt2.setInt(2, 2);
+    stmt2.executeUpdate();
+
+    conn.commit(); // всё хорошо — фиксируем
+} catch (SQLException e) {
+    conn.rollback(); // ошибка — откатываем
+    throw e;
+} finally {
+    conn.setAutoCommit(true);
+    conn.close();
+}</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Чем LEFT JOIN отличается от INNER JOIN?</li>
+            <li>Когда использовать WHERE, а когда HAVING?</li>
+            <li>Почему PreparedStatement лучше Statement?</li>
+            <li>Что такое транзакция и свойства ACID?</li>
+            <li>Как откатить транзакцию в JDBC?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · SQL и JDBC</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+:root {
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --heading: #e67e22;
+    --subheading: #2563eb;
+    --border: #d1d5db;
+    --code-bg: #e5e7eb;
+    --pre-bg: #1e293b;
+    --pre-text: #e2e8f0;
+    --th-bg: #e67e22;
+    --th-text: #ffffff;
+    --accent: #059669;
+    --danger: #dc2626;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --highlight: #fef3c7;
+    --card-hover: #f9fafb;
+}
+
+.dark {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #e2e8f0;
+    --heading: #f59e0b;
+    --subheading: #60a5fa;
+    --border: #334155;
+    --code-bg: #334155;
+    --pre-bg: #0f172a;
+    --pre-text: #f1f5f9;
+    --th-bg: #f59e0b;
+    --th-text: #0f172a;
+    --highlight: #422006;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    --card-hover: #273548;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+    line-height: 1.65;
+    transition: background 0.3s, color 0.3s;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 28px;
+    padding: 20px 0;
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+.header h1 { font-size: 32px; color: var(--heading); margin-bottom: 4px; }
+.header .subtitle { font-size: 16px; color: var(--subheading); margin-bottom: 14px; }
+
+/* Search */
+.search-wrap {
+    display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; padding: 0 16px;
+}
+#searchInput {
+    padding: 12px 18px; border: 2px solid var(--border); border-radius: 30px;
+    font-size: 15px; background: var(--bg); color: var(--text); outline: none;
+    width: 100%; max-width: 450px; transition: border 0.2s;
+}
+#searchInput:focus { border-color: var(--heading); }
+.btn {
+    padding: 12px 18px; border: none; border-radius: 30px; cursor: pointer;
+    font-size: 15px; font-weight: 600; transition: all 0.2s;
+}
+.btn-theme { background: var(--bg); color: var(--text); border: 2px solid var(--border); }
+.btn-theme:hover { background: var(--border); }
+.btn-back {
+    background: var(--subheading); color: #fff; text-decoration: none;
+    display: inline-block; margin-bottom: 18px; padding: 8px 16px; border-radius: 20px; font-size: 14px;
+}
+.btn-back:hover { opacity: 0.85; }
+
+/* Topics grid */
+.topics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 16px;
+}
+.topic-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    text-decoration: none;
+    color: var(--text);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    display: block;
+}
+.topic-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    background: var(--card-hover);
+}
+.topic-card .icon { font-size: 32px; display: block; margin-bottom: 10px; }
+.topic-card h2 { font-size: 18px; color: var(--subheading); margin-bottom: 6px; }
+.topic-card p { font-size: 13px; opacity: 0.85; line-height: 1.5; }
+.topic-card.hidden { display: none; }
+
+/* Content page */
+.content-page { background: var(--card); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.content-page h1 { color: var(--heading); margin-bottom: 6px; font-size: 26px; }
+.content-page h2 { color: var(--subheading); margin: 24px 0 12px; font-size: 21px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+.content-page h3 { color: var(--heading); margin: 18px 0 8px; font-size: 17px; }
+.content-page p { margin-bottom: 10px; }
+
+/* Tables */
+table {
+    width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 13px;
+    border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
+}
+th, td { border: 1px solid var(--border); padding: 9px 12px; text-align: left; vertical-align: top; }
+th { background: var(--th-bg); color: var(--th-text); font-weight: 600; font-size: 13px; }
+tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
+.dark tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
+
+/* Code */
+code {
+    background: var(--code-bg); padding: 2px 7px; border-radius: 4px; font-size: 13px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; word-break: break-word;
+}
+pre {
+    background: var(--pre-bg); color: var(--pre-text); padding: 16px; border-radius: 12px;
+    overflow-x: auto; font-size: 13px; line-height: 1.6; margin: 12px 0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    border: 1px solid var(--border);
+}
+
+/* Answer block */
+.answer-block {
+    background: var(--code-bg); border-left: 5px solid var(--accent);
+    padding: 14px 18px; border-radius: 0 10px 10px 0; margin: 14px 0;
+}
+.answer-block::before {
+    content: '💬 Как ответить на собесе:';
+    display: block; font-weight: 700; font-style: normal;
+    color: var(--accent); margin-bottom: 6px; font-size: 14px;
+}
+
+.note {
+    background: var(--highlight); padding: 12px 16px; border-radius: 10px; margin: 12px 0; font-size: 14px;
+}
+.note::before { content: '💡 '; font-weight: 700; }
+
+/* Footer */
+.footer { text-align: center; color: #94a3b8; font-size: 13px; margin-top: 28px; padding: 12px; }
+
+/* Lists */
+ul, ol { margin-left: 22px; margin-bottom: 12px; }
+li { margin-bottom: 4px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { height: 6px; width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Mobile */
+@media (max-width: 600px) {
+    body { padding: 10px; }
+    .header { padding: 14px; }
+    .header h1 { font-size: 24px; }
+    .topics-grid { grid-template-columns: 1fr; gap: 10px; }
+    .topic-card { padding: 14px; }
+    .content-page { padding: 14px; }
+    table { font-size: 11px; }
+    th, td { padding: 6px 8px; }
+    pre { font-size: 11px; padding: 10px; }
+}

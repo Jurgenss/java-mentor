@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>📝 String в Java</h1>
+
+        <div class="note">Строки — самый используемый класс в Java. На собесе спросят про immutable, String Pool и отличие от StringBuilder.</div>
+
+        <!-- Почему immutable -->
+        <h2>Почему String неизменяемый (immutable)</h2>
+        <p>Три главные причины:</p>
+        <ol>
+            <li><b>Безопасность:</b> строки используются в путях к файлам, паролях, URL. Если бы их можно было изменить после проверки — дыра в безопасности.</li>
+            <li><b>Потокобезопасность:</b> неизменяемый объект можно использовать в любом количестве потоков без синхронизации.</li>
+            <li><b>String Pool:</b> возможность кешировать и переиспользовать одинаковые строки экономит память.</li>
+        </ol>
+
+        <div class="answer-block">
+            Строки в Java неизменяемы по трём причинам: безопасность (нельзя подменить после проверки), потокобезопасность и возможность кеширования в String Pool для экономии памяти.
+        </div>
+
+        <!-- String Pool -->
+        <h2>String Pool (пул строк)</h2>
+        <p>Специальная область в куче, где хранятся строки, созданные через литералы.</p>
+
+        <pre>String a = "Hello";              // попадает в пул
+String b = "Hello";              // находит там же → та же ссылка
+String c = new String("Hello");  // новый объект ВНЕ пула
+String d = c.intern();           // возвращает ссылку из пула
+
+System.out.println(a == b);      // true  — один объект
+System.out.println(a == c);      // false — разные объекты
+System.out.println(a.equals(c)); // true  — equals сравнивает символы
+System.out.println(a == d);      // true  — intern вернул ссылку из пула</pre>
+
+        <h3>Как это работает:</h3>
+        <ul>
+            <li><code>"Hello"</code> — JVM проверяет пул: есть? → вернуть ссылку. Нет? → создать в пуле</li>
+            <li><code>new String("Hello")</code> — всегда новый объект в куче, не в пуле</li>
+            <li><code>intern()</code> — вернуть ссылку из пула (если нет — создать)</li>
+        </ul>
+
+        <div class="answer-block">
+            При создании через литерал строка попадает в String Pool. При создании через <code>new String()</code> — новый объект в куче, не в пуле. Метод <code>intern()</code> возвращает ссылку из пула. <code>==</code> сравнивает ссылки, <code>equals()</code> сравнивает символы.
+        </div>
+
+        <!-- Методы String -->
+        <h2>Важно: все методы возвращают НОВУЮ строку</h2>
+        <p>Исходная строка никогда не меняется!</p>
+
+        <pre>String s = "Java";
+s.concat("Rush");       // создаёт "JavaRush", но s не меняется!
+System.out.println(s);  // "Java"
+
+s = s.concat("Rush");   // теперь s указывает на новый объект
+System.out.println(s);  // "JavaRush"</pre>
+
+        <h3>Популярные методы String:</h3>
+        <table>
+            <tr><th>Метод</th><th>Описание</th><th>Пример</th></tr>
+            <tr><td><code>length()</code></td><td>Длина строки</td><td><code>"Java".length() → 4</code></td></tr>
+            <tr><td><code>charAt(i)</code></td><td>Символ по индексу</td><td><code>"Java".charAt(0) → 'J'</code></td></tr>
+            <tr><td><code>substring(i, j)</code></td><td>Подстрока с i до j</td><td><code>"Java".substring(0,2) → "Ja"</code></td></tr>
+            <tr><td><code>toUpperCase()</code></td><td>В верхний регистр</td><td><code>"java".toUpperCase() → "JAVA"</code></td></tr>
+            <tr><td><code>toLowerCase()</code></td><td>В нижний регистр</td><td><code>"JAVA".toLowerCase() → "java"</code></td></tr>
+            <tr><td><code>trim()</code></td><td>Убрать пробелы по краям</td><td><code>" java ".trim() → "java"</code></td></tr>
+            <tr><td><code>startsWith(s)</code></td><td>Начинается ли с s</td><td><code>"Java".startsWith("Ja") → true</code></td></tr>
+            <tr><td><code>endsWith(s)</code></td><td>Заканчивается ли на s</td><td><code>"Java".endsWith("va") → true</code></td></tr>
+            <tr><td><code>contains(s)</code></td><td>Содержит ли s</td><td><code>"Java".contains("av") → true</code></td></tr>
+            <tr><td><code>replace(a, b)</code></td><td>Заменить все a на b</td><td><code>"Java".replace('a','o') → "Jovo"</code></td></tr>
+            <tr><td><code>split(regex)</code></td><td>Разбить по разделителю</td><td><code>"a,b".split(",") → ["a","b"]</code></td></tr>
+            <tr><td><code>toCharArray()</code></td><td>В массив символов</td><td><code>"Hi".toCharArray() → ['H','i']</code></td></tr>
+            <tr><td><code>intern()</code></td><td>Вернуть ссылку из пула</td><td><code>new String("X").intern()</code></td></tr>
+        </table>
+
+        <!-- StringBuilder vs StringBuffer -->
+        <h2>String vs StringBuilder vs StringBuffer</h2>
+        <table>
+            <tr><th></th><th>String</th><th>StringBuilder</th><th>StringBuffer</th></tr>
+            <tr><td>Изменяемость</td><td>Immutable</td><td>Mutable</td><td>Mutable</td></tr>
+            <tr><td>Потокобезопасность</td><td>✅ (из-за immutable)</td><td>❌ Нет</td><td>✅ (synchronized)</td></tr>
+            <tr><td>Скорость</td><td>Медленно при конкатенации</td><td>Быстро</td><td>Медленнее StringBuilder</td></tr>
+            <tr><td>Когда</td><td>Редкие изменения</td><td>Много изменений, один поток</td><td>Много изменений, много потоков</td></tr>
+        </table>
+
+        <h3>Почему StringBuilder быстрее:</h3>
+        <pre>// Плохо — каждый += создаёт новый объект String (10 объектов!)
+String s = "";
+for (int i = 0; i < 10; i++) {
+    s += i; // новый String на каждой итерации
+}
+
+// Хорошо — один объект StringBuilder, меняем внутри
+StringBuilder sb = new StringBuilder();
+for (int i = 0; i < 10; i++) {
+    sb.append(i); // меняем существующий объект
+}
+String result = sb.toString(); // один раз в String</pre>
+
+        <h3>Основные методы StringBuilder:</h3>
+        <table>
+            <tr><th>Метод</th><th>Описание</th></tr>
+            <tr><td><code>append(x)</code></td><td>Добавить в конец</td></tr>
+            <tr><td><code>insert(i, x)</code></td><td>Вставить по индексу</td></tr>
+            <tr><td><code>delete(i, j)</code></td><td>Удалить с i по j</td></tr>
+            <tr><td><code>reverse()</code></td><td>Перевернуть</td></tr>
+            <tr><td><code>toString()</code></td><td>Преобразовать в String</td></tr>
+        </table>
+
+        <!-- Конкатенация -->
+        <h2>Конкатенация строк — как на самом деле</h2>
+        <p>Современная Java оптимизирует <code>+</code> через <code>invokedynamic</code> и <code>StringConcatFactory</code>, но в циклах всё равно лучше StringBuilder.</p>
+
+        <pre>// Компилятор превращает это:
+String s = "a" + "b" + "c";
+
+// Примерно в это (упрощённо):
+String s = "abc"; // константы склеиваются на этапе компиляции
+
+// А это:
+String s = a + b + c; // переменные
+// Превращается в StringBuilder (через invokedynamic в Java 9+)</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Почему String immutable? Назови три причины.</li>
+            <li>В чём разница между <code>"Hello"</code> и <code>new String("Hello")</code>?</li>
+            <li>Что делает метод <code>intern()</code>?</li>
+            <li>Когда использовать StringBuilder, а когда StringBuffer?</li>
+            <li>Почему <code>+=</code> в цикле — это плохо?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · String</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

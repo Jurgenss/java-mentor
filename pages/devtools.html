@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инструменты разработчика | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🛠 Инструменты разработчика: Логирование, Maven, Gradle</h1>
+
+        <!-- ==================== ЛОГИРОВАНИЕ ==================== -->
+        <h2>📋 Логирование (SLF4J + Logback)</h2>
+        <div class="note">Логирование — это запись информации о работе приложения. На собесе спросят: какие уровни логирования, какой фреймворк используешь, как настроить.</div>
+
+        <h3>Зачем нужно логирование:</h3>
+        <ul>
+            <li>🔍 <b>Отладка</b> — найти ошибку в проде, когда дебаггер не подключить</li>
+            <li>📊 <b>Мониторинг</b> — что происходит с приложением</li>
+            <li>📝 <b>Аудит</b> — кто и когда менял данные</li>
+        </ul>
+
+        <h3>SLF4J — фасад, Logback — реализация:</h3>
+        <pre>// SLF4J — интерфейс (фасад)
+// Logback / Log4j2 — реализация (можно менять без изменения кода)
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
+    public void createUser(String name) {
+        log.info("Создаём пользователя: {}", name); // {} — плейсхолдер
+        // ...
+        log.debug("Пользователь создан успешно");
+    }
+}</pre>
+
+        <h3>Уровни логирования (от важного к неважному):</h3>
+        <table>
+            <tr><th>Уровень</th><th>Когда использовать</th><th>Пример</th></tr>
+            <tr><td><b>ERROR</b></td><td>Ошибка, требует вмешательства</td><td>БД недоступна, не прошла оплата</td></tr>
+            <tr><td><b>WARN</b></td><td>Потенциальная проблема</td><td>Ретрай запроса, близок лимит</td></tr>
+            <tr><td><b>INFO</b></td><td>Важные события (дефолт в проде)</td><td>Пользователь зарегистрирован, заказ создан</td></tr>
+            <tr><td><b>DEBUG</b></td><td>Информация для отладки</td><td>Значения переменных, шаги алгоритма</td></tr>
+            <tr><td><b>TRACE</b></td><td>Максимальная детализация</td><td>Каждый вход/выход из метода</td></tr>
+        </table>
+
+        <h3>Почему не System.out.println?</h3>
+        <ul>
+            <li>❌ Нельзя управлять уровнем (либо пишем, либо нет)</li>
+            <li>❌ Нельзя настроить формат (дата, поток, класс)</li>
+            <li>❌ Нельзя писать в файл/БД/сеть</li>
+            <li>❌ Медленно (синхронный вывод в консоль)</li>
+        </ul>
+
+        <h3>Плейсхолдеры {} — почему лучше конкатенации:</h3>
+        <pre>// ❌ Плохо — конкатенация выполняется ВСЕГДА, даже если DEBUG выключен
+log.debug("Пользователь: " + user.getName() + ", возраст: " + user.getAge());
+
+// ✅ Хорошо — если DEBUG выключен, строка НЕ собирается (быстрее)
+log.debug("Пользователь: {}, возраст: {}", user.getName(), user.getAge());</pre>
+
+        <h3>Настройка в Spring Boot (application.properties):</h3>
+        <pre># Уровень для всего приложения
+logging.level.root=INFO
+
+# Уровень для конкретного пакета
+logging.level.com.example.service=DEBUG
+
+# Запись в файл
+logging.file.name=logs/myapp.log
+
+# Формат
+logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pre>
+
+        <h3>@Slf4j (Lombok) — ещё короче:</h3>
+        <pre>@Slf4j
+@Service
+public class UserService {
+    public void createUser(String name) {
+        log.info("Создаём пользователя: {}", name); // log генерируется автоматически!
+    }
+}</pre>
+
+        <div class="answer-block">
+            Для логирования использую SLF4J с Logback (стандарт в Spring Boot). Уровни: ERROR, WARN, INFO, DEBUG, TRACE. В проде обычно INFO, для отладки переключаю на DEBUG. Плейсхолдеры {} вместо конкатенации строк — экономят ресурсы. Lombok @Slf4j генерирует логгер автоматически.
+        </div>
+
+        <!-- ==================== MAVEN ==================== -->
+        <h2>📦 Maven</h2>
+        <div class="note">Maven — система сборки. Управляет зависимостями, компилирует, запускает тесты, собирает JAR/WAR.</div>
+
+        <h3>Основные команды:</h3>
+        <table>
+            <tr><th>Команда</th><th>Что делает</th></tr>
+            <tr><td><code>mvn clean</code></td><td>Удалить папку target (все собранные файлы)</td></tr>
+            <tr><td><code>mvn compile</code></td><td>Скомпилировать .java → .class</td></tr>
+            <tr><td><code>mvn test</code></td><td>Запустить тесты</td></tr>
+            <tr><td><code>mvn package</code></td><td>Собрать JAR/WAR (включает compile + test)</td></tr>
+            <tr><td><code>mvn install</code></td><td>package + установить в локальный репозиторий (~/.m2)</td></tr>
+            <tr><td><code>mvn clean install</code></td><td>Полная пересборка с нуля</td></tr>
+            <tr><td><code>mvn spring-boot:run</code></td><td>Запустить Spring Boot приложение</td></tr>
+        </table>
+
+        <h3>Жизненный цикл Maven (фазы):</h3>
+        <pre>clean → validate → compile → test → package → verify → install → deploy</pre>
+
+        <h3>pom.xml — основные секции:</h3>
+        <pre>&lt;dependencies&gt;
+    &lt;dependency&gt;                          <!-- Зависимость -->
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;scope&gt;compile&lt;/scope&gt;            <!-- по умолчанию -->
+    &lt;/dependency&gt;
+
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.postgresql&lt;/groupId&gt;
+        &lt;artifactId&gt;postgresql&lt;/artifactId&gt;
+        &lt;scope&gt;runtime&lt;/scope&gt;            <!-- только в рантайме -->
+    &lt;/dependency&gt;
+
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+        &lt;artifactId&gt;lombok&lt;/artifactId&gt;
+        &lt;scope&gt;provided&lt;/scope&gt;           <!-- нужен при компиляции, но не в JAR -->
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;</pre>
+
+        <h3>Scope зависимостей:</h3>
+        <table>
+            <tr><th>Scope</th><th>Когда доступна</th><th>Пример</th></tr>
+            <tr><td><code>compile</code></td><td>Всегда (по умолчанию)</td><td>Spring, Hibernate</td></tr>
+            <tr><td><code>runtime</code></td><td>В рантайме, не при компиляции</td><td>JDBC-драйвер</td></tr>
+            <tr><td><code>provided</code></td><td>Компиляция + тесты, НЕ в JAR</td><td>Lombok, Servlet API</td></tr>
+            <tr><td><code>test</code></td><td>Только при тестировании</td><td>JUnit, Mockito</td></tr>
+        </table>
+
+        <!-- ==================== GRADLE ==================== -->
+        <h2>🐘 Gradle (кратко)</h2>
+        <p>Gradle — более современная альтернатива Maven. Конфигурация на Groovy или Kotlin DSL.</p>
+
+        <h3>build.gradle (Groovy):</h3>
+        <pre>plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.0'
+}
+
+group = 'com.example'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    runtimeOnly 'org.postgresql:postgresql'
+    compileOnly 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}</pre>
+
+        <h3>Maven vs Gradle:</h3>
+        <table>
+            <tr><th></th><th>Maven</th><th>Gradle</th></tr>
+            <tr><td>Конфигурация</td><td>XML (pom.xml)</td><td>Groovy/Kotlin DSL</td></tr>
+            <tr><td>Скорость</td><td>Медленнее</td><td>Быстрее (инкрементальная сборка, кеш)</td></tr>
+            <tr><td>Гибкость</td><td>Жёсткий жизненный цикл</td><td>Можно кастомизировать</td></tr>
+            <tr><td>Когда</td><td>Большинство старых проектов</td><td>Новые проекты, Android</td></tr>
+        </table>
+
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Какие уровни логирования бывают? Какой уровень в проде?</li>
+            <li>Почему лучше использовать плейсхолдеры {} вместо конкатенации?</li>
+            <li>Что делает mvn clean install?</li>
+            <li>Чем отличается scope compile от provided?</li>
+            <li>В чём отличие Gradle от Maven?</li>
+        </ol>
+
+    </main>
+    <footer class="footer"><p>📱 Java Mentor · Инструменты разработчика</p></footer>
+    <script src="../js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JDBC → JPA → Hibernate | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>📊 JDBC → JPA → Hibernate</h1>
+
+        <div class="note">Эволюция работы с базами данных в Java: от ручного SQL до автоматической магии ORM.</div>
+
+        <!-- Сравнение -->
+        <h2>Три уровня работы с БД</h2>
+        <table>
+            <tr><th></th><th>JDBC</th><th>JdbcTemplate</th><th>JPA/Hibernate</th></tr>
+            <tr><td>SQL</td><td>Пишешь сам</td><td>Пишешь сам</td><td>Генерируется автоматически</td></tr>
+            <tr><td>Ресурсы</td><td>Закрываешь вручную</td><td>Автоматически</td><td>Автоматически</td></tr>
+            <tr><td>Объекты</td><td>ResultSet → ручной маппинг</td><td>RowMapper</td><td>Автоматически</td></tr>
+            <tr><td>Транзакции</td><td>conn.setAutoCommit()</td><td>@Transactional</td><td>@Transactional</td></tr>
+            <tr><td>Кеш</td><td>Нет</td><td>Нет</td><td>✅ L1 + L2</td></tr>
+            <tr><td>Контроль SQL</td><td>Полный</td><td>Полный</td><td>Меньше контроля</td></tr>
+            <tr><td>Когда</td><td>Учёба, простые скрипты</td><td>Простые CRUD</td><td>Большинство проектов</td></tr>
+        </table>
+
+        <!-- JDBC -->
+        <h2>Уровень 1: Чистый JDBC</h2>
+        <pre>Connection conn = null;
+PreparedStatement stmt = null;
+ResultSet rs = null;
+try {
+    conn = DriverManager.getConnection(url, user, pass);
+    conn.setAutoCommit(false);
+
+    stmt = conn.prepareStatement("UPDATE accounts SET balance = balance - ? WHERE id = ?");
+    stmt.setDouble(1, 500.00);
+    stmt.setInt(2, 1);
+    stmt.executeUpdate();
+
+    conn.commit();
+} catch (SQLException e) {
+    if (conn != null) conn.rollback();
+} finally {
+    if (rs != null) try { rs.close(); } catch (SQLException e) {}
+    if (stmt != null) try { stmt.close(); } catch (SQLException e) {}
+    if (conn != null) try { conn.close(); } catch (SQLException e) {}
+}</pre>
+        <p>Минимум 30 строк на один простой UPDATE. 80% кода — boilerplate.</p>
+
+        <!-- JdbcTemplate -->
+        <h2>Уровень 2: JdbcTemplate (Spring)</h2>
+        <pre>@Repository
+public class AccountRepository {
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    public BigDecimal getBalance(Long id) {
+        return jdbc.queryForObject(
+            "SELECT balance FROM accounts WHERE id = ?",
+            BigDecimal.class, id
+        );
+    }
+
+    public void withdraw(Long id, BigDecimal amount) {
+        jdbc.update(
+            "UPDATE accounts SET balance = balance - ? WHERE id = ?",
+            amount, id
+        );
+    }
+}
+
+@Service
+@Transactional
+public class TransferService {
+    @Autowired
+    private AccountRepository repo;
+
+    public void transfer(Long from, Long to, BigDecimal amount) {
+        if (repo.getBalance(from).compareTo(amount) < 0) {
+            throw new RuntimeException("Недостаточно средств!");
+        }
+        repo.withdraw(from, amount);
+        repo.deposit(to, amount);
+    }
+}</pre>
+        <p>SQL всё ещё пишем, но boilerplate исчез. Транзакции — одна аннотация.</p>
+
+        <!-- JPA/Hibernate -->
+        <h2>Уровень 3: JPA + Hibernate</h2>
+        <pre>@Entity
+@Table(name = "accounts")
+public class Account {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private BigDecimal balance;
+    // геттеры/сеттеры...
+}
+
+@Repository
+public class AccountRepository {
+    @PersistenceContext
+    private EntityManager em;
+
+    public Account findById(Long id) {
+        return em.find(Account.class, id);
+    }
+    // save() НЕ НУЖЕН — Hibernate отслеживает изменения!
+}
+
+@Service
+@Transactional
+public class TransferService {
+    @Autowired
+    private AccountRepository repo;
+
+    public void transfer(Long fromId, Long toId, BigDecimal amount) {
+        Account from = repo.findById(fromId);
+        Account to = repo.findById(toId);
+
+        if (from.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Недостаточно средств!");
+        }
+
+        from.setBalance(from.getBalance().subtract(amount));
+        to.setBalance(to.getBalance().add(amount));
+        // Hibernate сам сгенерирует UPDATE при выходе из @Transactional!
+    }
+}</pre>
+        <p>Ни одного SQL-запроса. Hibernate сам отслеживает изменения объектов (dirty checking) и генерирует SQL.</p>
+
+        <!-- JPA vs Hibernate -->
+        <h2>JPA vs Hibernate — в чём разница</h2>
+        <table>
+            <tr><th></th><th>JPA</th><th>Hibernate</th></tr>
+            <tr><td>Что это</td><td><b>Спецификация</b> (набор правил, интерфейсов)</td><td><b>Реализация</b> (конкретный код)</td></tr>
+            <tr><td>Аналогия</td><td>ГОСТ на розетки</td><td>Конкретная розетка</td></tr>
+            <tr><td>Пакет</td><td><code>javax.persistence.*</code></td><td><code>org.hibernate.*</code></td></tr>
+        </table>
+
+        <div class="answer-block">
+            <b>JPA</b> — это спецификация (интерфейсы), <b>Hibernate</b> — её реализация. В коде мы используем JPA-аннотации (<code>@Entity</code>, <code>@Table</code>, <code>@Id</code>), а под капотом Hibernate генерирует SQL. Если завтра появится другая реализация JPA — код не изменится.
+        </div>
+
+        <!-- Как работает Hibernate -->
+        <h2>Как Hibernate работает под капотом</h2>
+        <h3>Dirty Checking (отслеживание изменений):</h3>
+        <ol>
+            <li>При загрузке объекта Hibernate сохраняет "снимок" (snapshot) его состояния</li>
+            <li>При коммите транзакции сравнивает текущее состояние со снимком</li>
+            <li>Если есть изменения — генерирует UPDATE только для изменённых колонок</li>
+        </ol>
+
+        <h3>Кеш первого уровня (L1):</h3>
+        <ul>
+            <li>В рамках одной сессии (транзакции)</li>
+            <li>Повторный запрос того же объекта — из кеша, без SQL</li>
+            <li>Всегда включён, нельзя отключить</li>
+        </ul>
+
+        <h3>Кеш второго уровня (L2):</h3>
+        <ul>
+            <li>Между сессиями, на уровне SessionFactory</li>
+            <li>Подключается отдельно (EhCache, Hazelcast)</li>
+            <li>Хранит объекты в памяти между транзакциями</li>
+        </ul>
+
+        <pre>@Entity
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+public class Account { ... }</pre>
+
+        <!-- Spring Data JPA -->
+        <h2>Уровень 4: Spring Data JPA (совсем без кода)</h2>
+        <pre>// Только интерфейс — реализацию создаст Spring!
+@Repository
+public interface AccountRepository extends JpaRepository&lt;Account, Long&gt; {
+    
+    // Spring сам напишет реализацию по имени метода!
+    List&lt;Account&gt; findByBalanceGreaterThan(BigDecimal amount);
+    
+    Optional&lt;Account&gt; findByName(String name);
+    
+    @Query("SELECT a FROM Account a WHERE a.balance > :min")
+    List&lt;Account&gt; findRichAccounts(@Param("min") BigDecimal min);
+    
+    @Query(value = "SELECT * FROM accounts WHERE name LIKE %:name%", nativeQuery = true)
+    List&lt;Account&gt; searchByName(@Param("name") String name);
+}
+
+// Использование:
+@Service
+@Transactional
+public class AccountService {
+    @Autowired
+    private AccountRepository repo;
+    
+    public List&lt;Account&gt; getRichAccounts() {
+        return repo.findByBalanceGreaterThan(new BigDecimal("10000"));
+    }
+}</pre>
+
+        <p>Spring Data JPA генерирует SQL по <b>имени метода</b>: <code>findByBalanceGreaterThan</code> → <code>WHERE balance > ?</code>.</p>
+
+        <h3>Магия именования методов:</h3>
+        <table>
+            <tr><th>Метод</th><th>SQL</th></tr>
+            <tr><td><code>findByName(String name)</code></td><td><code>WHERE name = ?</code></td></tr>
+            <tr><td><code>findByNameLike(String pattern)</code></td><td><code>WHERE name LIKE ?</code></td></tr>
+            <tr><td><code>findByAgeGreaterThan(int age)</code></td><td><code>WHERE age > ?</code></td></tr>
+            <tr><td><code>findByAgeBetween(int min, int max)</code></td><td><code>WHERE age BETWEEN ? AND ?</code></td></tr>
+            <tr><td><code>findByNameOrderByAgeDesc(String name)</code></td><td><code>WHERE name = ? ORDER BY age DESC</code></td></tr>
+            <tr><td><code>findTop5ByOrderByBalanceDesc()</code></td><td><code>SELECT TOP 5 ... ORDER BY balance DESC</code></td></tr>
+        </table>
+
+        <!-- Когда что использовать -->
+        <h2>Когда что использовать в реальном проекте</h2>
+        <table>
+            <tr><th>Задача</th><th>Инструмент</th><th>Почему</th></tr>
+            <tr><td>Простые CRUD-операции</td><td>Spring Data JPA</td><td>Пишем только интерфейс</td></tr>
+            <tr><td>Сложный SELECT с JOIN</td><td>JPQL / Native Query</td><td>Контроль над запросом</td></tr>
+            <tr><td>Массовая вставка</td><td>JDBC batch / JdbcTemplate</td><td>Максимальная скорость</td></tr>
+            <tr><td>Отчёты, аналитика</td><td>JdbcTemplate + Native SQL</td><td>Сложные агрегации</td></tr>
+            <tr><td>Горячие данные</td><td>Hibernate L2 cache + Redis</td><td>Без запросов в БД</td></tr>
+        </table>
+
+        <div class="answer-block">
+            В реальных проектах используют гибридный подход: Spring Data JPA для 80% стандартных операций (CRUD), JdbcTemplate или нативные запросы для сложных отчётов и массовых операций. Плюс кеширование (Hibernate L2, Redis) для горячих данных.
+        </div>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>В чём разница между JPA и Hibernate?</li>
+            <li>Что такое dirty checking в Hibernate?</li>
+            <li>Зачем нужен кеш первого и второго уровня?</li>
+            <li>Как Spring Data JPA генерирует SQL по имени метода?</li>
+            <li>Когда в реальном проекте используют JDBC вместо JPA?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · JDBC → JPA → Hibernate</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

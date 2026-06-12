@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🔧 Git — основные команды</h1>
+
+        <div class="note">Git — система контроля версий. На собесе спросят базовые команды и разницу между merge и rebase.</div>
+
+        <!-- Базовые команды -->
+        <h2>Базовые команды</h2>
+        <table>
+            <tr><th>Команда</th><th>Что делает</th></tr>
+            <tr><td><code>git init</code></td><td>Создать новый локальный репозиторий</td></tr>
+            <tr><td><code>git clone &lt;url&gt;</code></td><td>Клонировать удалённый репозиторий</td></tr>
+            <tr><td><code>git status</code></td><td>Показать состояние файлов (изменённые, новые, staged)</td></tr>
+            <tr><td><code>git add &lt;file&gt;</code></td><td>Добавить файл в индекс (staging area)</td></tr>
+            <tr><td><code>git add .</code></td><td>Добавить ВСЕ изменения в индекс</td></tr>
+            <tr><td><code>git commit -m "..."</code></td><td>Создать коммит с сообщением</td></tr>
+            <tr><td><code>git push</code></td><td>Отправить коммиты на удалённый сервер</td></tr>
+            <tr><td><code>git pull</code></td><td>Забрать изменения с сервера (= fetch + merge)</td></tr>
+            <tr><td><code>git fetch</code></td><td>Забрать изменения, но НЕ сливать (без merge)</td></tr>
+            <tr><td><code>git log</code></td><td>История коммитов</td></tr>
+            <tr><td><code>git log --oneline</code></td><td>История коммитов (компактно, по одному на строку)</td></tr>
+            <tr><td><code>git diff</code></td><td>Показать изменения (не staged)</td></tr>
+            <tr><td><code>git diff --staged</code></td><td>Показать изменения в staged</td></tr>
+        </table>
+
+        <div class="answer-block">
+            <b>Рабочий процесс:</b> <code>git add</code> (добавить в индекс) → <code>git commit</code> (зафиксировать) → <code>git push</code> (отправить на сервер). <code>git pull</code> = <code>git fetch</code> + <code>git merge</code>.
+        </div>
+
+        <!-- Три состояния -->
+        <h2>Три состояния файлов в Git</h2>
+        <pre>Рабочая директория        Staging Area (индекс)       Репозиторий
+(Working Directory)        (git add)                  (git commit)
+     ↓                         ↓                          ↓
+  изменил файл  →  git add  →  файл в staged  →  git commit  →  коммит сохранён</pre>
+
+        <!-- Ветки -->
+        <h2>Ветки (branches)</h2>
+        <table>
+            <tr><th>Команда</th><th>Что делает</th></tr>
+            <tr><td><code>git branch</code></td><td>Показать список локальных веток</td></tr>
+            <tr><td><code>git branch -a</code></td><td>Показать ВСЕ ветки (локальные + удалённые)</td></tr>
+            <tr><td><code>git branch &lt;name&gt;</code></td><td>Создать новую ветку</td></tr>
+            <tr><td><code>git checkout &lt;branch&gt;</code></td><td>Переключиться на ветку</td></tr>
+            <tr><td><code>git checkout -b &lt;name&gt;</code></td><td>Создать И переключиться на новую ветку</td></tr>
+            <tr><td><code>git switch &lt;branch&gt;</code></td><td>Переключиться (Git 2.23+, более понятный аналог checkout)</td></tr>
+            <tr><td><code>git switch -c &lt;name&gt;</code></td><td>Создать и переключиться</td></tr>
+            <tr><td><code>git branch -d &lt;name&gt;</code></td><td>Удалить локальную ветку (если слита)</td></tr>
+            <tr><td><code>git branch -D &lt;name&gt;</code></td><td>Удалить локальную ветку (даже если не слита)</td></tr>
+            <tr><td><code>git push origin --delete &lt;name&gt;</code></td><td>Удалить удалённую ветку</td></tr>
+        </table>
+
+        <!-- Merge vs Rebase -->
+        <h2>Merge vs Rebase</h2>
+        <p>Оба способа объединить изменения из одной ветки в другую. Разница — в истории коммитов.</p>
+
+        <h3>Merge:</h3>
+        <pre># Находясь в main:
+git merge feature/login
+
+# Создаёт merge-коммит. История сохраняется как есть.
+# main:    A---B---C---M (merge commit)
+#                \     /
+# feature/login:  D---E</pre>
+        <ul>
+            <li>✅ Сохраняет реальную историю</li>
+            <li>✅ Безопасно для общих веток</li>
+            <li>❌ Много merge-коммитов "загрязняют" историю</li>
+        </ul>
+
+        <h3>Rebase:</h3>
+        <pre># Находясь в feature/login:
+git rebase main
+
+# "Перемещает" коммиты feature/login поверх main.
+# До:                  После:
+# main: A---B---C      main: A---B---C
+#            \                      \
+# feature:    D---E                  D'---E' (новые коммиты!)</pre>
+        <ul>
+            <li>✅ Чистая линейная история</li>
+            <li>❌ Переписывает историю — НЕ использовать в общих ветках!</li>
+            <li>❌ Может вызвать конфликты на каждом коммите</li>
+        </ul>
+
+        <table>
+            <tr><th></th><th>Merge</th><th>Rebase</th></tr>
+            <tr><td>История</td><td>Сохраняется (ветвление видно)</td><td>Линейная (как будто всё по порядку)</td></tr>
+            <tr><td>Безопасность</td><td>✅ Безопасно всегда</td><td>⚠ Только для личных веток!</td></tr>
+            <tr><td>Конфликты</td><td>Решаются один раз</td><td>Могут быть на каждом коммите</td></tr>
+            <tr><td>Команда</td><td><code>git merge branch</code></td><td><code>git rebase branch</code></td></tr>
+        </table>
+
+        <div class="answer-block">
+            <b>Merge</b> сохраняет историю и создаёт merge-коммит. Безопасен для общих веток. <b>Rebase</b> делает историю линейной, но переписывает коммиты — использовать ТОЛЬКО в личных ветках. Правило: rebase — для своих feature-веток перед merge в main, merge — для слияния в main.
+        </div>
+
+        <!-- Отмена изменений -->
+        <h2>Отмена изменений</h2>
+        <table>
+            <tr><th>Ситуация</th><th>Команда</th></tr>
+            <tr><td>Отменить изменения в файле (до add)</td><td><code>git checkout -- &lt;file&gt;</code> или <code>git restore &lt;file&gt;</code></td></tr>
+            <tr><td>Убрать файл из staged (после add)</td><td><code>git reset HEAD &lt;file&gt;</code> или <code>git restore --staged &lt;file&gt;</code></td></tr>
+            <tr><td>Отменить последний коммит (сохранить изменения)</td><td><code>git reset --soft HEAD~1</code></td></tr>
+            <tr><td>Отменить последний коммит (удалить изменения)</td><td><code>git reset --hard HEAD~1</code></td></tr>
+            <tr><td>Создать новый коммит, отменяющий изменения</td><td><code>git revert &lt;commit-hash&gt;</code></td></tr>
+        </table>
+
+        <!-- stash -->
+        <h2>git stash — "спрятать" изменения</h2>
+        <table>
+            <tr><th>Команда</th><th>Что делает</th></tr>
+            <tr><td><code>git stash</code></td><td>Спрятать все незакоммиченные изменения</td></tr>
+            <tr><td><code>git stash pop</code></td><td>Вернуть последние спрятанные изменения И удалить из stash</td></tr>
+            <tr><td><code>git stash apply</code></td><td>Вернуть изменения, НО оставить в stash</td></tr>
+            <tr><td><code>git stash list</code></td><td>Посмотреть список stash'ей</td></tr>
+            <tr><td><code>git stash drop</code></td><td>Удалить последний stash</td></tr>
+        </table>
+
+        <p><b>Сценарий:</b> работаешь в feature-ветке, нужно срочно переключиться в main. Изменения не готовы для коммита → <code>git stash</code> → переключился → сделал срочную задачу → вернулся → <code>git stash pop</code>.</p>
+
+        <!-- Популярные workflow -->
+        <h2>Популярные workflow</h2>
+
+        <h3>Как начать новую задачу:</h3>
+        <pre>git checkout main                # переключиться на main
+git pull                         # забрать последние изменения
+git checkout -b feature/task-42  # создать ветку для задачи
+# ... работаем, коммитим ...
+git push -u origin feature/task-42  # отправить ветку на сервер</pre>
+
+        <h3>Как смержить свою ветку:</h3>
+        <pre># Вариант 1: Через merge
+git checkout main
+git pull
+git merge feature/task-42
+git push
+
+# Вариант 2: Через rebase + merge (чистая история)
+git checkout feature/task-42
+git rebase main                  # перемещаем свои коммиты поверх main
+git checkout main
+git merge feature/task-42        # fast-forward merge — без merge-коммита!
+git push</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>В чём разница между git pull и git fetch?</li>
+            <li>Что делают команды git add, git commit, git push?</li>
+            <li>В чём разница между merge и rebase? Когда что использовать?</li>
+            <li>Как отменить изменения в файле до git add?</li>
+            <li>Для чего нужен git stash?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Git</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

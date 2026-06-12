@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generics | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🧬 Generics (обобщения)</h1>
+
+        <div class="note">Generics — это способ сделать код типобезопасным. Ошибки ловятся на этапе компиляции, а не в runtime.</div>
+
+        <!-- Зачем -->
+        <h2>Зачем нужны Generics</h2>
+        <p><b>Проблема до Generics (Java 4):</b></p>
+        <pre>List list = new ArrayList();   // сырой тип — raw type
+list.add("Привет");
+list.add(123);                  // можно что угодно
+list.add(new Car());
+
+String s = (String) list.get(0); // работает
+String s2 = (String) list.get(1); // ClassCastException! Там Integer</pre>
+
+        <p><b>С Generics (Java 5+):</b></p>
+        <pre>List&lt;String&gt; list = new ArrayList&lt;&gt;(); // только String!
+list.add("Привет");
+// list.add(123);  // ❌ Ошибка компиляции!
+
+String s = list.get(0); // приведение не нужно</pre>
+
+        <p><b>Что дают Generics:</b></p>
+        <ul>
+            <li>✅ Проверка типов на этапе компиляции</li>
+            <li>✅ Не нужно приведение типов (cast)</li>
+            <li>✅ Код самодокументируется</li>
+        </ul>
+
+        <div class="answer-block">
+            Generics обеспечивают типобезопасность на этапе компиляции и избавляют от явного приведения типов. Ошибка типа "положил Integer, достал как String" теперь видна сразу в IDE, а не падает в продакшене.
+        </div>
+
+        <!-- Основные понятия -->
+        <h2>Основные понятия</h2>
+        <table>
+            <tr><th>Термин</th><th>Пример</th><th>Значение</th></tr>
+            <tr><td><b>Параметризованный тип</b></td><td><code>List&lt;String&gt;</code></td><td>Тип с указанным параметром</td></tr>
+            <tr><td><b>Тип-параметр</b></td><td><code>T</code> в <code>class Box&lt;T&gt;</code></td><td>Заполнитель для будущего типа</td></tr>
+            <tr><td><b>Raw type (сырой тип)</b></td><td><code>List</code> без &lt;&gt;</td><td>Только для обратной совместимости, <b>не использовать!</b></td></tr>
+            <tr><td><b>Wildcard</b></td><td><code>?</code></td><td>"Любой тип"</td></tr>
+        </table>
+
+        <h3>Принятые буквы для тип-параметров:</h3>
+        <table>
+            <tr><th>Буква</th><th>Значение</th><th>Где используется</th></tr>
+            <tr><td><code>T</code></td><td>Type</td><td>Общего назначения</td></tr>
+            <tr><td><code>E</code></td><td>Element</td><td>Коллекции (<code>List&lt;E&gt;</code>)</td></tr>
+            <tr><td><code>K</code></td><td>Key</td><td>Map (<code>Map&lt;K, V&gt;</code>)</td></tr>
+            <tr><td><code>V</code></td><td>Value</td><td>Map</td></tr>
+            <tr><td><code>N</code></td><td>Number</td><td>Числа</td></tr>
+        </table>
+
+        <!-- Обобщённый класс -->
+        <h2>Обобщённый класс</h2>
+        <pre>public class Box&lt;T&gt; {
+    private T item;
+
+    public void put(T item) { this.item = item; }
+    public T get() { return item; }
+}
+
+Box&lt;String&gt; stringBox = new Box&lt;&gt;();
+stringBox.put("Привет");
+String s = stringBox.get(); // String, без приведения!
+
+Box&lt;Integer&gt; intBox = new Box&lt;&gt;();
+intBox.put(123);
+Integer i = intBox.get(); // Integer</pre>
+        <p>Один класс работает с <b>любым</b> типом. T заменяется на конкретный тип при создании.</p>
+
+        <!-- Обобщённый метод -->
+        <h2>Обобщённый метод</h2>
+        <pre>public static &lt;T&gt; T getFirst(List&lt;T&gt; list) {
+    return list.get(0);
+}
+
+// Вызов — компилятор сам понимает T:
+List&lt;String&gt; names = List.of("Анна", "Иван");
+String first = getFirst(names); // T = String</pre>
+
+        <!-- Wildcards -->
+        <h2>Wildcards (подстановочные знаки)</h2>
+        <p><code>?</code> — "неизвестный тип". Используется, когда мы не знаем точно, какой тип будет.</p>
+
+        <table>
+            <tr><th>Wildcard</th><th>Что означает</th><th>Читать как</th><th>Писать</th></tr>
+            <tr>
+                <td><code>List&lt;?&gt;</code></td>
+                <td>Список чего угодно</td>
+                <td><code>Object</code></td>
+                <td>❌ Ничего</td>
+            </tr>
+            <tr>
+                <td><code>List&lt;? extends Number&gt;</code></td>
+                <td>Список Number или потомков</td>
+                <td><code>Number</code></td>
+                <td>❌ Ничего</td>
+            </tr>
+            <tr>
+                <td><code>List&lt;? super Integer&gt;</code></td>
+                <td>Список Integer или предков</td>
+                <td><code>Object</code></td>
+                <td>✅ <code>Integer</code></td>
+            </tr>
+        </table>
+
+        <!-- PECS -->
+        <h2>PECS-правило</h2>
+        <p><b>P</b>roducer <b>E</b>xtends, <b>C</b>onsumer <b>S</b>uper</p>
+
+        <h3>Producer (производитель) — extends</h3>
+        <p>Мы только <b>читаем</b> из структуры. Используй <code>? extends</code>.</p>
+        <pre>void printNumbers(List&lt;? extends Number&gt; list) {
+    for (Number n : list) {           // ✅ читаем как Number
+        System.out.println(n);
+    }
+    // list.add(10);                  // ❌ нельзя! Не знаем точный тип
+}</pre>
+
+        <h3>Consumer (потребитель) — super</h3>
+        <p>Мы только <b>пишем</b> в структуру. Используй <code>? super</code>.</p>
+        <pre>void addNumbers(List&lt;? super Integer&gt; list) {
+    list.add(10);                      // ✅ можно добавить Integer
+    list.add(20);
+    // Integer x = list.get(0);        // ❌ возвращается Object
+}</pre>
+
+        <!-- Примеры extends vs super -->
+        <h2>extends vs super — наглядный пример</h2>
+        <pre>// ? extends Number — подходят Number, Integer, Double (вниз по иерархии)
+List&lt;? extends Number&gt; list1 = new ArrayList&lt;Integer&gt;(); // ✅
+List&lt;? extends Number&gt; list2 = new ArrayList&lt;Double&gt;();  // ✅
+List&lt;? extends Number&gt; list3 = new ArrayList&lt;Number&gt;();  // ✅
+// List<? extends Number> list4 = new ArrayList<Object>(); // ❌
+
+// ? super Integer — подходят Integer, Number, Object (вверх по иерархии)
+List&lt;? super Integer&gt; list5 = new ArrayList&lt;Integer&gt;(); // ✅
+List&lt;? super Integer&gt; list6 = new ArrayList&lt;Number&gt;();  // ✅
+List&lt;? super Integer&gt; list7 = new ArrayList&lt;Object&gt;();  // ✅
+// List<? super Integer> list8 = new ArrayList<Double>(); // ❌</pre>
+
+        <div class="answer-block">
+            <code>? extends T</code> — верхняя граница, подходят T и потомки. Используется для чтения (producer). <code>? super T</code> — нижняя граница, подходят T и предки. Используется для записи (consumer). Правило PECS: Producer Extends, Consumer Super.
+        </div>
+
+        <!-- Type Erasure -->
+        <h2>Type Erasure (стирание типов)</h2>
+        <p>На этапе компиляции информация о generics <b>удаляется</b>. В байт-коде <code>List&lt;String&gt;</code> превращается в <code>List</code>.</p>
+
+        <pre>List&lt;String&gt; strings = new ArrayList&lt;&gt;();
+List&lt;Integer&gt; integers = new ArrayList&lt;&gt;();
+
+// В рантайме оба — просто ArrayList:
+System.out.println(strings.getClass() == integers.getClass()); // true!</pre>
+
+        <p><b>Следствия стирания:</b></p>
+        <ul>
+            <li>Нельзя создать <code>new T()</code> — тип стёрт</li>
+            <li>Нельзя <code>instanceof List&lt;String&gt;</code> — только <code>instanceof List</code></li>
+            <li>Нельзя перегружать методы, отличающиеся только generics-параметром</li>
+        </ul>
+
+        <!-- Raw type — опасность -->
+        <h2>Raw type — опасность</h2>
+        <pre>Box rawBox = new Box();          // raw type — без <>
+rawBox.put("Привет");            // положили String
+
+Box&lt;Integer&gt; intBox = rawBox;    // warning! Unchecked assignment
+Integer i = intBox.get();        // ClassCastException! Там String</pre>
+        <p>Никогда не используй raw types в новом коде. Только для обратной совместимости со старым кодом.</p>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что такое raw type и почему его нельзя использовать?</li>
+            <li>В чём разница между <code>? extends Number</code> и <code>? super Number</code>?</li>
+            <li>Можно ли добавить элемент в <code>List&lt;?&gt;</code>?</li>
+            <li>Что такое type erasure и зачем оно нужно?</li>
+            <li>Почему нельзя создать <code>new T()</code> внутри обобщённого класса?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Generics</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

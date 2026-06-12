@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Методы Java — полный справочник | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .class-block {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .class-block h3 {
+            color: var(--heading);
+            font-size: 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .class-block.collapsed .class-content {
+            display: none;
+        }
+        .class-block h3 .toggle-icon {
+            font-size: 14px;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+        .class-block.collapsed h3 .toggle-icon {
+            transform: rotate(-90deg);
+        }
+        .method-section {
+            margin: 14px 0;
+            padding: 12px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            border-left: 3px solid var(--subheading);
+        }
+        .method-section h4 {
+            color: var(--subheading);
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+        .method-section .sig {
+            color: var(--accent);
+            font-size: 13px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            margin-bottom: 6px;
+        }
+        .method-section p {
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        .method-section pre {
+            margin: 6px 0 0 0;
+            font-size: 12px;
+        }
+        .nav-index {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .nav-index a {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: var(--subheading);
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .nav-index a:hover {
+            background: var(--subheading);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>📋 Методы Java — полный справочник</h1>
+        <div class="note">Каждый метод расписан с сигнатурой, описанием и примерами кода. Нажимай на название класса, чтобы свернуть/развернуть.</div>
+
+        <!-- Навигация -->
+        <div class="nav-index">
+            <a href="#string">String</a>
+            <a href="#stringbuilder">StringBuilder</a>
+            <a href="#list">List</a>
+            <a href="#set">Set</a>
+            <a href="#map">Map</a>
+            <a href="#stream">Stream</a>
+            <a href="#math">Math</a>
+            <a href="#optional">Optional</a>
+            <a href="#collections">Collections</a>
+        </div>
+
+        <!-- ==================== String ==================== -->
+        <div class="class-block" id="string">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                📝 String <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="class-content">
+
+                <div class="method-section">
+                    <h4>.length()</h4>
+                    <p class="sig">public int length()</p>
+                    <p>Возвращает <b>количество символов</b> в строке.</p>
+                    <pre>String s = "Java";
+System.out.println(s.length()); // 4
+
+String empty = "";
+System.out.println(empty.length()); // 0
+
+String spaces = "   ";
+System.out.println(spaces.length()); // 3 (пробелы тоже символы!)</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.charAt(int index)</h4>
+                    <p class="sig">public char charAt(int index)</p>
+                    <p>Возвращает символ по индексу (от 0 до length()-1). <b>StringIndexOutOfBoundsException</b> если индекс вне диапазона.</p>
+                    <pre>String s = "Java";
+char c1 = s.charAt(0); // 'J'
+char c2 = s.charAt(3); // 'a'
+// char c3 = s.charAt(4); // ❌ StringIndexOutOfBoundsException</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.substring(int beginIndex, int endIndex)</h4>
+                    <p class="sig">public String substring(int beginIndex, int endIndex)</p>
+                    <p>Возвращает <b>новую строку</b> с beginIndex (включительно) по endIndex (не включительно). Исходная строка не меняется!</p>
+                    <pre>String s = "JavaRush";
+String sub1 = s.substring(0, 4);  // "Java" (индексы 0,1,2,3)
+String sub2 = s.substring(4);     // "Rush" (от 4 до конца)
+System.out.println(s);            // "JavaRush" — не изменилась!</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.toUpperCase() / .toLowerCase()</h4>
+                    <p class="sig">public String toUpperCase()<br>public String toLowerCase()</p>
+                    <p>Возвращает <b>новую строку</b> в верхнем/нижнем регистре.</p>
+                    <pre>String s = "Java";
+String upper = s.toUpperCase(); // "JAVA"
+String lower = s.toLowerCase(); // "java"
+System.out.println(s);          // "Java" — не изменилась!</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.trim()</h4>
+                    <p class="sig">public String trim()</p>
+                    <p>Убирает пробелы в <b>начале и конце</b> строки. Пробелы внутри не трогает. Возвращает новую строку.</p>
+                    <pre>String s = "  Java  ";
+String trimmed = s.trim(); // "Java"
+System.out.println(s);     // "  Java  " — не изменилась!</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.startsWith(String prefix) / .endsWith(String suffix)</h4>
+                    <p class="sig">public boolean startsWith(String prefix)<br>public boolean endsWith(String suffix)</p>
+                    <p>Проверяет, начинается/заканчивается ли строка на указанную подстроку.</p>
+                    <pre>String s = "JavaRush";
+boolean b1 = s.startsWith("Java"); // true
+boolean b2 = s.startsWith("Rush"); // false
+boolean b3 = s.endsWith("Rush");   // true
+boolean b4 = s.endsWith("Java");   // false</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.contains(CharSequence s)</h4>
+                    <p class="sig">public boolean contains(CharSequence s)</p>
+                    <p>Проверяет, содержится ли подстрока в строке.</p>
+                    <pre>String s = "JavaRush";
+boolean b1 = s.contains("ava");  // true
+boolean b2 = s.contains("Rush"); // true
+boolean b3 = s.contains("Python"); // false</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.replace(char oldChar, char newChar)</h4>
+                    <p class="sig">public String replace(char oldChar, char newChar)<br>public String replace(CharSequence target, CharSequence replacement)</p>
+                    <p>Заменяет <b>все</b> вхождения. Для char — точно, для строки — как обычная замена.</p>
+                    <pre>String s = "Java";
+String r1 = s.replace('a', 'o');      // "Jovo"
+String r2 = s.replace("Ja", "Ko");    // "Kotlin"
+// replaceAll — с регулярными выражениями:
+String r3 = "a1b2c3".replaceAll("\\d", ""); // "abc"</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.split(String regex)</h4>
+                    <p class="sig">public String[] split(String regex)</p>
+                    <p>Разбивает строку на массив по разделителю. Разделитель — регулярное выражение!</p>
+                    <pre>String s = "яблоко,банан,груша";
+String[] fruits = s.split(",");
+// ["яблоко", "банан", "груша"]
+
+String s2 = "a   b c"; // множественные пробелы
+String[] parts = s2.split("\\s+"); // ["a", "b", "c"]</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.toCharArray()</h4>
+                    <p class="sig">public char[] toCharArray()</p>
+                    <p>Преобразует строку в массив символов.</p>
+                    <pre>String s = "Hi";
+char[] chars = s.toCharArray();
+// chars = ['H', 'i']
+chars[0] = 'B';
+String newStr = new String(chars); // "Bi"</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.indexOf(String str) / .lastIndexOf(String str)</h4>
+                    <p class="sig">public int indexOf(String str)<br>public int lastIndexOf(String str)</p>
+                    <p>Возвращает индекс первого/последнего вхождения. -1 если не найдено.</p>
+                    <pre>String s = "JavaJava";
+int i1 = s.indexOf("Java");     // 0 (первое)
+int i2 = s.lastIndexOf("Java"); // 4 (последнее)
+int i3 = s.indexOf("Python");   // -1 (не найдено)</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.isEmpty() / .isBlank()</h4>
+                    <p class="sig">public boolean isEmpty()<br>public boolean isBlank() // Java 11+</p>
+                    <p><b>isEmpty()</b>: true если длина = 0. <b>isBlank()</b>: true если пустая или только пробелы.</p>
+                    <pre>"".isEmpty();       // true
+" ".isEmpty();      // false — пробел есть
+" ".isBlank();      // true — только пробелы
+"Java".isBlank();   // false</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.equals(Object o) / .equalsIgnoreCase(String s)</h4>
+                    <p class="sig">public boolean equals(Object o)<br>public boolean equalsIgnoreCase(String s)</p>
+                    <p>Сравнивает строки <b>по содержимому</b>, не по ссылкам. equalsIgnoreCase — без учёта регистра.</p>
+                    <pre>String a = "Java";
+String b = "java";
+a.equals(b);               // false
+a.equalsIgnoreCase(b);     // true
+
+// НЕЛЬЗЯ сравнивать через == !
+String c = new String("Java");
+a == c;                    // false — разные объекты!
+a.equals(c);               // true — содержимое одинаковое</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.concat(String str)</h4>
+                    <p class="sig">public String concat(String str)</p>
+                    <p>Склеивает строки. Возвращает новую. Аналог <code>+</code>.</p>
+                    <pre>String s = "Hello".concat(" World"); // "Hello World"
+// То же самое:
+String s2 = "Hello" + " World";</pre>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== StringBuilder ==================== -->
+        <div class="class-block collapsed" id="stringbuilder">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                🔧 StringBuilder <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="class-content">
+
+                <div class="method-section">
+                    <h4>.append(любой тип)</h4>
+                    <p class="sig">public StringBuilder append(...)</p>
+                    <p>Добавляет в конец. Можно цепочкой. Возвращает тот же объект (не создаёт новый!).</p>
+                    <pre>StringBuilder sb = new StringBuilder();
+sb.append("Hello");
+sb.append(" ");
+sb.append(2026);
+// Цепочкой:
+sb.append(" - ").append("Java").append(" Mentor");
+String result = sb.toString(); // "Hello 2026 - Java Mentor"</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.insert(int offset, ...)</h4>
+                    <p class="sig">public StringBuilder insert(int offset, ...)</p>
+                    <p>Вставляет по указанному индексу. Остальное сдвигается вправо.</p>
+                    <pre>StringBuilder sb = new StringBuilder("Java");
+sb.insert(1, "XX"); // вставить после 'J'
+System.out.println(sb); // "JXXava"</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.delete(int start, int end)</h4>
+                    <p class="sig">public StringBuilder delete(int start, int end)</p>
+                    <p>Удаляет символы [start, end).</p>
+                    <pre>StringBuilder sb = new StringBuilder("JavaRush");
+sb.delete(4, 8); // удалить "Rush" (индексы 4,5,6,7)
+System.out.println(sb); // "Java"</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.reverse()</h4>
+                    <p class="sig">public StringBuilder reverse()</p>
+                    <p>Переворачивает содержимое.</p>
+                    <pre>StringBuilder sb = new StringBuilder("Java");
+sb.reverse();
+System.out.println(sb); // "avaJ"</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.toString()</h4>
+                    <p class="sig">public String toString()</p>
+                    <p>Преобразует обратно в String.</p>
+                    <pre>StringBuilder sb = new StringBuilder("Hello");
+String s = sb.toString(); // "Hello"</pre>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== List ==================== -->
+        <div class="class-block collapsed" id="list">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                📋 List (ArrayList / LinkedList) <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="class-content">
+
+                <div class="method-section">
+                    <h4>.add(E e) / .add(int i, E e)</h4>
+                    <p class="sig">boolean add(E e) | void add(int index, E e)</p>
+                    <pre>List&lt;String&gt; list = new ArrayList&lt;&gt;();
+list.add("A");           // в конец → ["A"]
+list.add("B");           // в конец → ["A", "B"]
+list.add(1, "X");        // вставить по индексу → ["A", "X", "B"]</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.get(int i)</h4>
+                    <p class="sig">E get(int index)</p>
+                    <p>Получить элемент по индексу. ArrayList — O(1), LinkedList — O(n).</p>
+                    <pre>List&lt;String&gt; list = List.of("A", "B", "C");
+String first = list.get(0); // "A"
+String last = list.get(list.size() - 1); // "C"</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.set(int i, E e)</h4>
+                    <p class="sig">E set(int index, E element)</p>
+                    <p>Заменить элемент. Возвращает <b>старое</b> значение.</p>
+                    <pre>List&lt;String&gt; list = new ArrayList&lt;&gt;(List.of("A", "B", "C"));
+String old = list.set(1, "X"); // old = "B", list = ["A", "X", "C"]</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.remove(int i) / .remove(Object o)</h4>
+                    <p class="sig">E remove(int index) | boolean remove(Object o)</p>
+                    <p><b>Внимание:</b> для списка Integer remove(1) удалит по ИНДЕКСУ, не по значению! Для удаления по значению: remove(Integer.valueOf(1)).</p>
+                    <pre>List&lt;String&gt; list = new ArrayList&lt;&gt;(List.of("A", "B", "C"));
+list.remove(1);       // удалили "B" → ["A", "C"]
+list.remove("A");     // удалили по значению → ["C"]</pre>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== Map ==================== -->
+        <div class="class-block collapsed" id="map">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                🗺 Map (HashMap / TreeMap) <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="class-content">
+
+                <div class="method-section">
+                    <h4>.put(K key, V value)</h4>
+                    <p class="sig">V put(K key, V value)</p>
+                    <p>Добавляет пару. Если ключ уже был — перезаписывает и возвращает <b>старое значение</b>. Если не было — возвращает null.</p>
+                    <pre>Map&lt;String, Integer&gt; map = new HashMap&lt;&gt;();
+map.put("Java", 1995);       // null (не было)
+Integer old = map.put("Java", 1996); // 1995 (перезаписали)
+System.out.println(map); // {Java=1996}</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.get(Object key) / .getOrDefault(Object key, V defaultValue)</h4>
+                    <p class="sig">V get(Object key) | V getOrDefault(Object key, V defaultValue)</p>
+                    <p>get возвращает null если ключа нет. getOrDefault — указанное default-значение.</p>
+                    <pre>Map&lt;String, String&gt; map = Map.of("A", "Apple");
+String val = map.get("A");          // "Apple"
+String missing = map.get("B");      // null
+String def = map.getOrDefault("B", "Unknown"); // "Unknown"</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.keySet() / .values() / .entrySet()</h4>
+                    <p class="sig">Set&lt;K&gt; keySet() | Collection&lt;V&gt; values() | Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet()</p>
+                    <p>Три способа обойти Map.</p>
+                    <pre>Map&lt;String, Integer&gt; map = new HashMap&lt;&gt;();
+map.put("A", 1); map.put("B", 2);
+
+// 1. По ключам
+for (String key : map.keySet()) {
+    System.out.println(key + " = " + map.get(key));
+}
+
+// 2. По entry (самый эффективный)
+for (Map.Entry&lt;String, Integer&gt; e : map.entrySet()) {
+    System.out.println(e.getKey() + " = " + e.getValue());
+}
+
+// 3. forEach
+map.forEach((k, v) -> System.out.println(k + " = " + v));</pre>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== Stream ==================== -->
+        <div class="class-block collapsed" id="stream">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                🌊 Stream <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="class-content">
+
+                <div class="method-section">
+                    <h4>.filter(Predicate)</h4>
+                    <p class="sig">Stream&lt;T&gt; filter(Predicate&lt;? super T&gt; predicate)</p>
+                    <p>Оставляет только элементы, для которых predicate возвращает true.</p>
+                    <pre>List&lt;Integer&gt; list = List.of(1, 2, 3, 4, 5, 6);
+List&lt;Integer&gt; even = list.stream()
+    .filter(x -> x % 2 == 0)     // 2, 4, 6
+    .collect(Collectors.toList());
+// [2, 4, 6]</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.map(Function)</h4>
+                    <p class="sig">Stream&lt;R&gt; map(Function&lt;? super T, ? extends R&gt; mapper)</p>
+                    <p>Преобразует каждый элемент в другой тип/значение.</p>
+                    <pre>List&lt;String&gt; names = List.of("java", "kotlin");
+List&lt;String&gt; upper = names.stream()
+    .map(String::toUpperCase)    // "JAVA", "KOTLIN"
+    .collect(Collectors.toList());
+// ["JAVA", "KOTLIN"]</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.flatMap(Function)</h4>
+                    <p class="sig">Stream&lt;R&gt; flatMap(Function&lt;T, Stream&lt;R&gt;&gt; mapper)</p>
+                    <p>"Схлопывает" вложенные структуры в один плоский поток.</p>
+                    <pre>List&lt;List&lt;String&gt;&gt; nested = List.of(
+    List.of("A", "B"),
+    List.of("C", "D")
+);
+List&lt;String&gt; flat = nested.stream()
+    .flatMap(List::stream)       // "A", "B", "C", "D"
+    .collect(Collectors.toList());
+// ["A", "B", "C", "D"]</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.collect(Collectors.toList()) / .collect(Collectors.joining())</h4>
+                    <p class="sig">R collect(Collector collector)</p>
+                    <p>Собирает элементы в коллекцию, строку, Map — зависит от коллектора.</p>
+                    <pre>// В список
+List&lt;String&gt; list = stream.collect(Collectors.toList());
+
+// В строку через запятую
+String joined = stream.collect(Collectors.joining(", "));
+
+// Группировка
+Map&lt;String, List&lt;User&gt;&gt; byCity = users.stream()
+    .collect(Collectors.groupingBy(User::getCity));</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.reduce(accumulator)</h4>
+                    <p class="sig">Optional&lt;T&gt; reduce(BinaryOperator&lt;T&gt; accumulator)</p>
+                    <p>Свёртка: сумма, произведение, максимум и т.д.</p>
+                    <pre>List&lt;Integer&gt; numbers = List.of(1, 2, 3, 4, 5);
+
+// Сумма
+int sum = numbers.stream().reduce(0, (a, b) -> a + b); // 15
+
+// Максимум
+Optional&lt;Integer&gt; max = numbers.stream().reduce(Integer::max);
+
+// Альтернативы:
+int sum2 = numbers.stream().mapToInt(Integer::intValue).sum();
+Optional&lt;Integer&gt; max2 = numbers.stream().max(Integer::compareTo);</pre>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== Math ==================== -->
+        <div class="class-block collapsed" id="math">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                🔢 Math (статические методы) <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="class-content">
+
+                <div class="method-section">
+                    <h4>Math.abs() / Math.max() / Math.min()</h4>
+                    <pre>int abs = Math.abs(-5);      // 5
+double abs2 = Math.abs(-3.14); // 3.14
+
+int max = Math.max(10, 20);    // 20
+double max2 = Math.max(3.5, 2.1); // 3.5
+
+int min = Math.min(10, 20);    // 10</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>Math.pow() / Math.sqrt()</h4>
+                    <pre>double pow = Math.pow(2, 3);   // 8.0 (2 в степени 3)
+double sqrt = Math.sqrt(9);     // 3.0
+double sqrt2 = Math.sqrt(2);    // 1.4142...</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>Math.round() / Math.ceil() / Math.floor()</h4>
+                    <pre>long r1 = Math.round(3.2);  // 3
+long r2 = Math.round(3.7);  // 4
+
+double c1 = Math.ceil(3.1);  // 4.0  (вверх)
+double c2 = Math.ceil(3.9);  // 4.0
+
+double f1 = Math.floor(3.1); // 3.0  (вниз)
+double f2 = Math.floor(3.9); // 3.0</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>Math.random()</h4>
+                    <pre>double r = Math.random(); // [0.0, 1.0)
+// Случайное целое 0..99:
+int randomInt = (int) (Math.random() * 100);
+// Случайное целое 1..100:
+int random1to100 = (int) (Math.random() * 100) + 1;</pre>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== Optional ==================== -->
+        <div class="class-block collapsed" id="optional">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                🎁 Optional <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="class-content">
+
+                <div class="method-section">
+                    <h4>.of() / .ofNullable() / .empty()</h4>
+                    <pre>Optional&lt;String&gt; opt1 = Optional.of("Java");       // значение есть, не null
+// Optional&lt;String&gt; opt2 = Optional.of(null);        // ❌ NullPointerException!
+
+Optional&lt;String&gt; opt2 = Optional.ofNullable(null);   // ✅ можно null → Optional.empty
+Optional&lt;String&gt; opt3 = Optional.empty();            // явно пустой</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.isPresent() / .get()</h4>
+                    <pre>Optional&lt;String&gt; opt = Optional.of("Java");
+if (opt.isPresent()) {
+    String s = opt.get(); // "Java"
+}
+// get() на пустом Optional → NoSuchElementException!</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.orElse() / .orElseGet() / .orElseThrow()</h4>
+                    <pre>Optional&lt;String&gt; opt = Optional.empty();
+
+String s1 = opt.orElse("default");              // "default"
+String s2 = opt.orElseGet(() -> "computed");    // "computed" (Supplier вызывается только при empty)
+// String s3 = opt.orElseThrow();               // NoSuchElementException
+String s4 = opt.orElseThrow(() -> new RuntimeException("Нет значения!"));</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>.map() / .filter()</h4>
+                    <pre>Optional&lt;String&gt; opt = Optional.of("Java");
+
+Optional&lt;Integer&gt; len = opt.map(String::length); // Optional[4]
+Optional&lt;String&gt; filtered = opt.filter(s -> s.startsWith("J")); // Optional["Java"]
+Optional&lt;String&gt; empty = opt.filter(s -> s.startsWith("X"));    // Optional.empty</pre>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== Collections (утилитный класс) ==================== -->
+        <div class="class-block collapsed" id="collections">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                🛠 Collections (утилитный класс) <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="class-content">
+
+                <div class="method-section">
+                    <h4>Collections.sort() / Collections.reverse()</h4>
+                    <pre>List&lt;String&gt; list = new ArrayList&lt;&gt;(List.of("C", "A", "B"));
+
+Collections.sort(list);                    // [A, B, C] — natural order
+Collections.sort(list, Comparator.reverseOrder()); // [C, B, A]
+Collections.reverse(list);                 // перевернуть порядок</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>Collections.min() / Collections.max()</h4>
+                    <pre>List&lt;Integer&gt; list = List.of(5, 2, 9, 1);
+int min = Collections.min(list); // 1
+int max = Collections.max(list); // 9</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>Collections.frequency()</h4>
+                    <pre>List&lt;String&gt; list = List.of("A", "B", "A", "C", "A");
+int freq = Collections.frequency(list, "A"); // 3</pre>
+                </div>
+
+                <div class="method-section">
+                    <h4>Collections.unmodifiableList() / Collections.synchronizedList()</h4>
+                    <pre>List&lt;String&gt; original = new ArrayList&lt;&gt;(List.of("A", "B"));
+List&lt;String&gt; unmod = Collections.unmodifiableList(original);
+// unmod.add("C"); // ❌ UnsupportedOperationException
+
+List&lt;String&gt; sync = Collections.synchronizedList(new ArrayList&lt;&gt;());</pre>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Полный справочник методов</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

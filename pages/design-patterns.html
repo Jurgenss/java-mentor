@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Паттерны проектирования | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🎨 Паттерны проектирования</h1>
+
+        <div class="note">Паттерны — проверенные решения типовых задач. На собесе на джуна обычно спрашивают Singleton, Factory, Builder, а также знание категорий (порождающие, структурные, поведенческие).</div>
+
+        <!-- Категории -->
+        <h2>Три категории паттернов</h2>
+        <table>
+            <tr><th>Категория</th><th>Задача</th><th>Примеры</th></tr>
+            <tr><td><b>Порождающие</b> (Creational)</td><td>Как создавать объекты гибко и удобно</td><td>Singleton, Factory Method, Builder, Prototype</td></tr>
+            <tr><td><b>Структурные</b> (Structural)</td><td>Как организовать отношения между классами</td><td>Adapter, Decorator, Proxy, Facade</td></tr>
+            <tr><td><b>Поведенческие</b> (Behavioral)</td><td>Как организовать взаимодействие объектов</td><td>Observer, Strategy, Template Method, Chain of Responsibility</td></tr>
+        </table>
+
+        <!-- Singleton -->
+        <h2>1. Singleton (Одиночка) — порождающий</h2>
+        <p><b>Суть:</b> гарантирует, что у класса есть только ОДИН экземпляр, и предоставляет глобальную точку доступа к нему.</p>
+        <p><b>Когда:</b> конфигурация приложения, пул соединений, логгер, кеш.</p>
+
+        <h3>Потокобезопасный Singleton (DCL — Double-Checked Locking):</h3>
+        <pre>public class DatabaseConnection {
+    // volatile — обязательно! Иначе другой поток может увидеть частично созданный объект
+    private static volatile DatabaseConnection instance;
+
+    private DatabaseConnection() {
+        // приватный конструктор — нельзя создать извне
+    }
+
+    public static DatabaseConnection getInstance() {
+        if (instance == null) {                    // первая проверка (без блокировки)
+            synchronized (DatabaseConnection.class) {
+                if (instance == null) {            // вторая проверка (внутри блокировки)
+                    instance = new DatabaseConnection();
+                }
+            }
+        }
+        return instance;
+    }
+}</pre>
+
+        <h3>Singleton через Enum (самый надёжный):</h3>
+        <pre>public enum Config {
+    INSTANCE;
+
+    private String appName = "MyApp";
+
+    public String getAppName() { return appName; }
+    public void setAppName(String name) { this.appName = name; }
+}
+
+// Использование:
+Config.INSTANCE.getAppName();</pre>
+        <ul>
+            <li>✅ Защита от рефлексии (нельзя создать второй экземпляр)</li>
+            <li>✅ Защита от сериализации/десериализации</li>
+            <li>✅ Потокобезопасность из коробки</li>
+        </ul>
+
+        <div class="answer-block">
+            <b>Singleton</b> гарантирует единственный экземпляр класса. Используется для конфигураций, пулов соединений, логгеров. Лучшая реализация в Java — через enum: защита от рефлексии, сериализации и потокобезопасность из коробки.
+        </div>
+
+        <!-- Factory Method -->
+        <h2>2. Factory Method (Фабричный метод) — порождающий</h2>
+        <p><b>Суть:</b> выносит создание объектов в отдельный метод/класс. Клиент не знает конкретный класс — работает через интерфейс.</p>
+        <p><b>Когда:</b> нужно создавать разные типы объектов в зависимости от условий.</p>
+
+        <pre>// Продукт — интерфейс
+interface Payment {
+    void pay(BigDecimal amount);
+}
+
+// Конкретные продукты
+class CardPayment implements Payment {
+    public void pay(BigDecimal amount) {
+        System.out.println("Оплата картой: " + amount);
+    }
+}
+
+class QrPayment implements Payment {
+    public void pay(BigDecimal amount) {
+        System.out.println("Оплата по QR: " + amount);
+    }
+}
+
+// Фабрика
+class PaymentFactory {
+    public static Payment create(String type) {
+        return switch (type) {
+            case "CARD" -> new CardPayment();
+            case "QR" -> new QrPayment();
+            default -> throw new IllegalArgumentException("Неизвестный тип: " + type);
+        };
+    }
+}
+
+// Клиент — не знает про CardPayment и QrPayment
+Payment payment = PaymentFactory.create("CARD");
+payment.pay(new BigDecimal("1000"));</pre>
+
+        <!-- Builder -->
+        <h2>3. Builder (Строитель) — порождающий</h2>
+        <p><b>Суть:</b> пошаговое создание сложного объекта. Вместо конструктора с 10 параметрами — цепочка методов.</p>
+        <p><b>Когда:</b> у объекта много полей, часть из них опциональна.</p>
+
+        <pre>public class User {
+    private final String name;       // обязательно
+    private final String email;      // обязательно
+    private final int age;           // опционально
+    private final String phone;      // опционально
+    private final String address;    // опционально
+
+    private User(Builder builder) {
+        this.name = builder.name;
+        this.email = builder.email;
+        this.age = builder.age;
+        this.phone = builder.phone;
+        this.address = builder.address;
+    }
+
+    // Builder
+    public static class Builder {
+        private final String name;   // обязательно — в конструкторе Builder'а
+        private final String email;
+        private int age;
+        private String phone;
+        private String address;
+
+        public Builder(String name, String email) {
+            this.name = name;
+            this.email = email;
+        }
+
+        public Builder age(int age) { this.age = age; return this; }
+        public Builder phone(String phone) { this.phone = phone; return this; }
+        public Builder address(String address) { this.address = address; return this; }
+
+        public User build() {
+            return new User(this);
+        }
+    }
+}
+
+// Использование
+User user = new User.Builder("Иван", "ivan@mail.ru")
+    .age(25)
+    .phone("+79001234567")
+    .build();</pre>
+
+        <p><b>Lombok упрощает:</b></p>
+        <pre>@Builder
+public class User {
+    private final String name;
+    private final String email;
+    private final int age;
+    private final String phone;
+}
+
+User user = User.builder()
+    .name("Иван")
+    .email("ivan@mail.ru")
+    .age(25)
+    .build();</pre>
+
+        <!-- Adapter -->
+        <h2>4. Adapter (Адаптер) — структурный</h2>
+        <p><b>Суть:</b> позволяет объектам с несовместимыми интерфейсами работать вместе (как переходник для розетки).</p>
+        <p><b>Когда:</b> нужно использовать сторонний класс, но его интерфейс не подходит.</p>
+
+        <pre>// Сторонний класс (не можем менять)
+class ThirdPartyLogger {
+    void logMessage(String msg) {
+        System.out.println("[3rd-party] " + msg);
+    }
+}
+
+// Наш интерфейс
+interface Logger {
+    void info(String message);
+    void error(String message);
+}
+
+// Адаптер
+class LoggerAdapter implements Logger {
+    private final ThirdPartyLogger adaptee;
+
+    public LoggerAdapter(ThirdPartyLogger adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    @Override
+    public void info(String message) {
+        adaptee.logMessage("INFO: " + message);
+    }
+
+    @Override
+    public void error(String message) {
+        adaptee.logMessage("ERROR: " + message);
+    }
+}
+
+// Использование — везде работаем через Logger, не зная про ThirdPartyLogger
+Logger logger = new LoggerAdapter(new ThirdPartyLogger());
+logger.info("Приложение запущено");</pre>
+
+        <!-- Decorator -->
+        <h2>5. Decorator (Декоратор) — структурный</h2>
+        <p><b>Суть:</b> динамически добавляет новую функциональность объекту, оборачивая его. В отличие от наследования — на лету.</p>
+        <p><b>Когда:</b> нужно добавить поведение объекту без изменения его класса.</p>
+
+        <pre>// Базовый интерфейс
+interface Coffee {
+    String getDescription();
+    double getCost();
+}
+
+// Базовый класс
+class SimpleCoffee implements Coffee {
+    public String getDescription() { return "Кофе"; }
+    public double getCost() { return 100.0; }
+}
+
+// Декоратор — обёртка
+abstract class CoffeeDecorator implements Coffee {
+    protected final Coffee coffee; // оборачиваемый объект
+
+    public CoffeeDecorator(Coffee coffee) { this.coffee = coffee; }
+}
+
+// Конкретные декораторы
+class MilkDecorator extends CoffeeDecorator {
+    public MilkDecorator(Coffee coffee) { super(coffee); }
+    public String getDescription() { return coffee.getDescription() + " + молоко"; }
+    public double getCost() { return coffee.getCost() + 30.0; }
+}
+
+class SugarDecorator extends CoffeeDecorator {
+    public SugarDecorator(Coffee coffee) { super(coffee); }
+    public String getDescription() { return coffee.getDescription() + " + сахар"; }
+    public double getCost() { return coffee.getCost() + 5.0; }
+}
+
+// Использование — можно комбинировать как угодно!
+Coffee coffee = new SimpleCoffee();               // Кофе — 100₽
+coffee = new MilkDecorator(coffee);               // + молоко — 130₽
+coffee = new SugarDecorator(coffee);              // + сахар — 135₽
+System.out.println(coffee.getDescription());      // Кофе + молоко + сахар</pre>
+
+        <p><b>Где в Java:</b> <code>BufferedReader</code> — декоратор для <code>Reader</code>, <code>BufferedInputStream</code> — декоратор для <code>InputStream</code>.</p>
+
+        <!-- Observer -->
+        <h2>6. Observer (Наблюдатель) — поведенческий</h2>
+        <p><b>Суть:</b> одни объекты (наблюдатели) подписываются на события другого объекта (издателя). Когда издатель меняется — все наблюдатели получают уведомление.</p>
+        <p><b>Когда:</b> рассылка уведомлений, обновление UI при изменении данных.</p>
+
+        <pre>// Издатель
+class NewsAgency {
+    private final List&lt;Observer&gt; observers = new ArrayList&lt;&gt;();
+    private String news;
+
+    public void subscribe(Observer observer) { observers.add(observer); }
+    public void unsubscribe(Observer observer) { observers.remove(observer); }
+
+    public void setNews(String news) {
+        this.news = news;
+        notifyObservers(); // оповещаем всех
+    }
+
+    private void notifyObservers() {
+        for (Observer o : observers) {
+            o.update(news);
+        }
+    }
+}
+
+// Наблюдатель
+interface Observer {
+    void update(String news);
+}
+
+class EmailSubscriber implements Observer {
+    private final String name;
+    public EmailSubscriber(String name) { this.name = name; }
+    public void update(String news) {
+        System.out.println(name + " получил новость: " + news);
+    }
+}
+
+// Использование
+NewsAgency agency = new NewsAgency();
+agency.subscribe(new EmailSubscriber("Иван"));
+agency.subscribe(new EmailSubscriber("Мария"));
+agency.setNews("Java 25 вышел!"); // оба получат уведомление</pre>
+
+        <!-- Strategy -->
+        <h2>7. Strategy (Стратегия) — поведенческий</h2>
+        <p><b>Суть:</b> семейство алгоритмов, каждый в своём классе. Можно переключать алгоритм на лету.</p>
+        <p><b>Когда:</b> разные способы сортировки, расчёта скидки, валидации.</p>
+
+        <pre>// Стратегия — интерфейс
+interface DiscountStrategy {
+    BigDecimal apply(BigDecimal price);
+}
+
+// Конкретные стратегии
+class NoDiscount implements DiscountStrategy {
+    public BigDecimal apply(BigDecimal price) { return price; }
+}
+
+class SeasonalDiscount implements DiscountStrategy {
+    public BigDecimal apply(BigDecimal price) {
+        return price.multiply(new BigDecimal("0.8")); // -20%
+    }
+}
+
+class VipDiscount implements DiscountStrategy {
+    public BigDecimal apply(BigDecimal price) {
+        return price.multiply(new BigDecimal("0.5")); // -50%
+    }
+}
+
+// Контекст
+class PriceCalculator {
+    private DiscountStrategy strategy;
+
+    public void setStrategy(DiscountStrategy strategy) {
+        this.strategy = strategy;
+    }
+
+    public BigDecimal calculate(BigDecimal price) {
+        return strategy.apply(price);
+    }
+}
+
+// Использование
+PriceCalculator calc = new PriceCalculator();
+
+calc.setStrategy(new NoDiscount());
+calc.calculate(new BigDecimal("1000")); // 1000
+
+calc.setStrategy(new SeasonalDiscount());
+calc.calculate(new BigDecimal("1000")); // 800 — переключили на лету!</pre>
+
+        <!-- Шпаргалка -->
+        <h2>Шпаргалка: какой паттерн когда</h2>
+        <table>
+            <tr><th>Проблема</th><th>Паттерн</th></tr>
+            <tr><td>Нужен только один экземпляр класса</td><td><b>Singleton</b></td></tr>
+            <tr><td>Создание разных типов объектов по условию</td><td><b>Factory Method</b></td></tr>
+            <tr><td>Много параметров у конструктора</td><td><b>Builder</b></td></tr>
+            <tr><td>Несовместимые интерфейсы</td><td><b>Adapter</b></td></tr>
+            <tr><td>Добавить поведение объекту без изменения кода</td><td><b>Decorator</b></td></tr>
+            <tr><td>Уведомлять подписчиков о событиях</td><td><b>Observer</b></td></tr>
+            <tr><td>Переключать алгоритмы на лету</td><td><b>Strategy</b></td></tr>
+            <tr><td>Сложная система → простой интерфейс</td><td><b>Facade</b></td></tr>
+            <tr><td>Доступ к удалённому объекту как к локальному</td><td><b>Proxy</b></td></tr>
+        </table>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Какие три категории паттернов ты знаешь?</li>
+            <li>Чем Factory Method отличается от Builder?</li>
+            <li>Как сделать потокобезопасный Singleton?</li>
+            <li>Где в стандартной библиотеке Java используется Decorator?</li>
+            <li>В чём разница между Adapter и Decorator?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Паттерны проектирования</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

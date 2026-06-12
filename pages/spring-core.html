@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Core | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🍃 Spring Core — IoC, DI, бины</h1>
+
+        <div class="note">Spring — самый популярный фреймворк в Java. На собесе на джуна спросят: что такое IoC/DI, что такое бин, scope бинов, @Component vs @Bean.</div>
+
+        <!-- IoC -->
+        <h2>IoC (Inversion of Control) — инверсия управления</h2>
+        <p><b>Суть:</b> не ты управляешь созданием объектов, а фреймворк.</p>
+
+        <pre>// Без IoC — ты сам создаёшь зависимости
+public class UserService {
+    private UserRepository repo = new UserRepository(); // жёсткая связь
+}
+
+// С IoC (Spring) — контейнер создаёт и внедряет
+@Service
+public class UserService {
+    @Autowired
+    private UserRepository repo; // Spring сам подставит
+}</pre>
+
+        <p>Раньше ты управлял кодом. Теперь код управляется Spring-контейнером — отсюда "инверсия управления".</p>
+
+        <!-- DI -->
+        <h2>DI (Dependency Injection) — внедрение зависимостей</h2>
+        <p><b>DI — это реализация IoC.</b> Зависимости не создаются внутри класса, а "впрыскиваются" извне.</p>
+
+        <h3>Три способа внедрения:</h3>
+        <table>
+            <tr><th>Способ</th><th>Аннотация</th><th>Рекомендация</th></tr>
+            <tr>
+                <td><b>Через конструктор</b></td>
+                <td><code>@Autowired</code> на конструкторе (можно опустить, если конструктор один)</td>
+                <td>✅ Лучший способ. Неизменяемость, удобно тестировать.</td>
+            </tr>
+            <tr>
+                <td><b>Через сеттер</b></td>
+                <td><code>@Autowired</code> на сеттере</td>
+                <td>Для опциональных зависимостей.</td>
+            </tr>
+            <tr>
+                <td><b>Через поле</b></td>
+                <td><code>@Autowired</code> на поле</td>
+                <td>❌ Не рекомендуется. Сложно тестировать, скрытые зависимости.</td>
+            </tr>
+        </table>
+
+        <pre>// ✅ Конструктор (рекомендуемый)
+@Service
+public class UserService {
+    private final UserRepository repo;
+
+    public UserService(UserRepository repo) { // @Autowired можно не писать
+        this.repo = repo;
+    }
+}
+
+// С Lombok — ещё короче:
+@Service
+@RequiredArgsConstructor
+public class UserService {
+    private final UserRepository repo;
+}
+
+// ❌ Поле (не рекомендуется)
+@Service
+public class UserService {
+    @Autowired
+    private UserRepository repo; // нельзя сделать final, сложно тестировать
+}</pre>
+
+        <div class="answer-block">
+            <b>IoC</b> — принцип: фреймворк управляет объектами, а не разработчик. <b>DI</b> — реализация IoC: зависимости внедряются извне. Лучший способ DI — через конструктор: объект сразу создаётся в готовом состоянии, зависимости неизменяемы (<code>final</code>), легко тестировать.
+        </div>
+
+        <!-- Bean -->
+        <h2>Bean (бин)</h2>
+        <p><b>Bean</b> — это объект, которым управляет Spring-контейнер. Создаётся, настраивается и уничтожается контейнером.</p>
+
+        <h3>Способы объявить бин:</h3>
+        <table>
+            <tr><th>Способ</th><th>Аннотация</th><th>Где использовать</th></tr>
+            <tr>
+                <td>Стереотипные аннотации</td>
+                <td><code>@Component</code>, <code>@Service</code>, <code>@Repository</code>, <code>@Controller</code></td>
+                <td>Свои классы</td>
+            </tr>
+            <tr>
+                <td>Java-конфигурация</td>
+                <td><code>@Bean</code> в <code>@Configuration</code>-классе</td>
+                <td>Сторонние классы, ручная настройка</td>
+            </tr>
+            <tr>
+                <td>XML-конфигурация (устарело)</td>
+                <td><code>&lt;bean&gt;</code> в XML</td>
+                <td>Легаси</td>
+            </tr>
+        </table>
+
+        <h3>@Component vs @Bean:</h3>
+        <table>
+            <tr><th></th><th>@Component</th><th>@Bean</th></tr>
+            <tr><td>Уровень</td><td>Класс</td><td>Метод</td></tr>
+            <tr><td>Автоматическое сканирование</td><td>✅ Да</td><td>❌ Нет (явно объявляем)</td></tr>
+            <tr><td>Когда</td><td>Свои классы</td><td>Сторонние классы (RestTemplate, DataSource)</td></tr>
+        </table>
+
+        <pre>// @Component — на своём классе
+@Component
+public class EmailService { ... }
+
+// @Bean — для стороннего класса
+@Configuration
+public class AppConfig {
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate(); // RestTemplate — не наш класс
+    }
+}</pre>
+
+        <!-- Стереотипные аннотации -->
+        <h2>Стереотипные аннотации</h2>
+        <pre>@Component       // общий бин
+ ├── @Service     // бизнес-логика
+ ├── @Repository  // работа с БД (транслирует SQL-исключения в Spring)
+ └── @Controller  // веб-контроллер
+      └── @RestController = @Controller + @ResponseBody (JSON API)</pre>
+
+        <p>Все четыре создают бины. Разница — в семантике (читаемость) и доп. функциональности.</p>
+
+        <!-- Scope -->
+        <h2>Scope бинов (область видимости)</h2>
+        <table>
+            <tr><th>Scope</th><th>Описание</th></tr>
+            <tr>
+                <td><code>singleton</code></td>
+                <td><b>По умолчанию.</b> Один экземпляр на весь контейнер. Все запросы получают тот же объект.</td>
+            </tr>
+            <tr>
+                <td><code>prototype</code></td>
+                <td>Новый экземпляр при каждом запросе бина.</td>
+            </tr>
+            <tr>
+                <td><code>request</code></td>
+                <td>Один экземпляр на HTTP-запрос (только в веб-приложениях).</td>
+            </tr>
+            <tr>
+                <td><code>session</code></td>
+                <td>Один экземпляр на HTTP-сессию (веб).</td>
+            </tr>
+            <tr>
+                <td><code>application</code></td>
+                <td>Один экземпляр на ServletContext (веб).</td>
+            </tr>
+        </table>
+
+        <pre>@Component
+@Scope("prototype") // или @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+public class ReportGenerator { ... }</pre>
+
+        <p><b>Нюанс:</b> если singleton-бин зависит от prototype-бина — новый prototype не будет создаваться при каждом вызове. Решение: <code>@Lookup</code> или <code>ObjectFactory</code>.</p>
+
+        <!-- Жизненный цикл бина -->
+        <h2>Жизненный цикл бина</h2>
+        <ol>
+            <li>Создание экземпляра (конструктор)</li>
+            <li>Внедрение зависимостей (@Autowired)</li>
+            <li>Пост-инициализация (@PostConstruct, InitializingBean)</li>
+            <li>Бин готов к использованию</li>
+            <li>Пред-уничтожение (@PreDestroy, DisposableBean)</li>
+            <li>Уничтожение</li>
+        </ol>
+
+        <pre>@Component
+public class MyBean {
+    @PostConstruct
+    public void init() {
+        System.out.println("Бин создан и настроен!");
+    }
+
+    @PreDestroy
+    public void destroy() {
+        System.out.println("Бин уничтожается");
+    }
+}</pre>
+
+        <!-- ApplicationContext -->
+        <h2>Контекст Spring (ApplicationContext)</h2>
+        <p><b>Контейнер</b>, который хранит и управляет бинами. Создаётся при запуске приложения.</p>
+
+        <pre>// В Spring Boot — автоматически через @SpringBootApplication
+@SpringBootApplication
+public class MyApp {
+    public static void main(String[] args) {
+        ApplicationContext ctx = SpringApplication.run(MyApp.class, args);
+        MyService service = ctx.getBean(MyService.class); // получить бин
+    }
+}</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что такое IoC и DI? В чём разница?</li>
+            <li>Какие способы внедрения зависимостей бывают? Какой лучше?</li>
+            <li>В чём разница между @Component и @Bean?</li>
+            <li>Какие scope бинов бывают? Какой по умолчанию?</li>
+            <li>Что произойдёт, если singleton-бин зависит от prototype-бина?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Spring Core</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

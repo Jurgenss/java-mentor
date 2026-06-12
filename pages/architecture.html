@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Архитектура high-load | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🏗 Архитектура высоконагруженных систем</h1>
+
+        <div class="note">На джуна не спросят строить high-load, но могут спросить общие принципы: кеширование, репликация, очереди, CQRS.</div>
+
+        <!-- Три уровня -->
+        <h2>Три уровня оптимизации</h2>
+        <table>
+            <tr><th>Уровень</th><th>Что делаем</th><th>Инструменты</th></tr>
+            <tr>
+                <td><b>Разные инструменты</b></td>
+                <td>JPA для простого, JDBC для сложного</td>
+                <td>Hibernate + JdbcTemplate</td>
+            </tr>
+            <tr>
+                <td><b>Разделение чтения/записи</b></td>
+                <td>Читаем с реплик, пишем в мастер</td>
+                <td>CQRS, репликация БД</td>
+            </tr>
+            <tr>
+                <td><b>Асинхронность</b></td>
+                <td>Не ждём результат, обрабатываем в фоне</td>
+                <td>@Async, Kafka, RabbitMQ</td>
+            </tr>
+        </table>
+
+        <div class="answer-block">
+            В высоконагруженных системах нагрузку распределяют на нескольких уровнях: горизонтальное масштабирование (балансировщик + несколько экземпляров), разделение чтения/записи (CQRS + реплики), кеширование (Redis), асинхронная обработка (Kafka). Каждый инструмент — для своей задачи.
+        </div>
+
+        <!-- Горизонтальное масштабирование -->
+        <h2>Горизонтальное масштабирование</h2>
+        <p>Запускаем не один сервер, а несколько копий приложения за балансировщиком (Nginx).</p>
+
+        <pre>               Балансировщик (Nginx)
+                      ↓
+        ┌─────────────┼─────────────┐
+        ↓             ↓             ↓
+    Сервер 1      Сервер 2      Сервер 3
+  (Spring App)  (Spring App)  (Spring App)
+        ↓             ↓             ↓
+        └─────────────┼─────────────┘
+                      ↓
+               База данных</pre>
+
+        <p><b>Правила:</b></p>
+        <ul>
+            <li>Приложение должно быть <b>stateless</b> — не хранить состояние (сессии, кеш) в памяти сервера</li>
+            <li>Сессии и кеш — в Redis, файлы — в S3/MinIO</li>
+            <li>Балансировщик распределяет запросы (round-robin, least-connections)</li>
+        </ul>
+
+        <!-- CQRS -->
+        <h2>CQRS — разделение чтения и записи</h2>
+        <p><b>Command Query Responsibility Segregation</b> — команды (изменение) и запросы (чтение) обрабатываются отдельно.</p>
+
+        <pre>Пользователь → REST API
+                ↓
+        ┌──────┴──────┐
+        ↓              ↓
+    Команды          Запросы
+  (INSERT/UPDATE)   (SELECT)
+        ↓              ↓
+    Мастер БД       Реплика БД (read-only, может быть несколько)
+        ↓              
+   Репликация (автоматически, master → replica)</pre>
+
+        <p><b>Пример в Spring:</b></p>
+        <pre>@Service
+public class OrderService {
+
+    @Transactional // → в мастер (запись)
+    public void createOrder(Order order) {
+        orderRepo.save(order);
+    }
+
+    @Transactional(readOnly = true) // → в реплику (чтение)
+    public List&lt;Order&gt; getOrders() {
+        return orderRepo.findAll();
+    }
+}</pre>
+
+        <!-- Кеширование -->
+        <h2>Кеширование</h2>
+        <p><b>Правило:</b> чем ближе кеш к пользователю — тем быстрее, но тем меньше данных.</p>
+
+        <table>
+            <tr><th>Уровень кеша</th><th>Технология</th><th>Скорость</th><th>Объём</th></tr>
+            <tr><td>Кеш браузера / CDN</td><td>HTTP-заголовки, Cloudflare</td><td>⚡⚡⚡ Мгновенно</td><td>Маленький</td></tr>
+            <tr><td>Кеш приложения (L2)</td><td>Hibernate L2, Caffeine</td><td>⚡⚡ В памяти JVM</td><td>Средний</td></tr>
+            <tr><td>Распределённый кеш</td><td>Redis, Hazelcast</td><td>⚡ По сети</td><td>Большой</td></tr>
+            <tr><td>База данных</td><td>PostgreSQL, MySQL</td><td>🐢 Диск</td><td>Огромный</td></tr>
+        </table>
+
+        <h3>Паттерны кеширования:</h3>
+        <pre>// Cache-Aside (самый частый)
+public Order getOrder(Long id) {
+    // 1. Проверяем кеш
+    Order cached = redis.get("order:" + id);
+    if (cached != null) return cached;
+
+    // 2. Кеша нет — идём в БД
+    Order order = orderRepo.findById(id).orElseThrow();
+
+    // 3. Кладём в кеш
+    redis.set("order:" + id, order, Duration.ofMinutes(10));
+
+    return order;
+}
+
+// В Spring — ещё проще:
+@Cacheable(value = "orders", key = "#id")
+public Order getOrder(Long id) { ... }
+
+@CacheEvict(value = "orders", key = "#id") // сбросить кеш
+public void updateOrder(Long id, OrderDTO dto) { ... }</pre>
+
+        <!-- Асинхронность -->
+        <h2>Асинхронная обработка</h2>
+        <p>Долгие операции (email, генерация отчётов) не должны блокировать пользователя.</p>
+
+        <h3>Простой способ — @Async:</h3>
+        <pre>@Service
+public class EmailService {
+
+    @Async  // выполнится в отдельном потоке
+    public void sendWelcomeEmail(User user) {
+        // отправка email (3 секунды)
+    }
+}
+
+// Вызов:
+@Transactional
+public void register(User user) {
+    userRepo.save(user);           // 50ms
+    emailService.sendWelcomeEmail(user); // поставили в очередь, сразу вернулись
+    // Пользователь получил ответ через 50ms, а не через 3 секунды!
+}</pre>
+        <p>⚠ Минус: если сервер упадёт — задача потеряется.</p>
+
+        <h3>Надёжный способ — очередь сообщений:</h3>
+        <pre>Пользователь → Сервис A (регистрация)
+                   ↓
+              Kafka (сообщение: "новый юзер 123")
+                   ↓
+              Сервис B (email-рассылка) — читает и отправляет</pre>
+
+        <pre>// Сервис A — кидаем сообщение
+@Service
+public class RegistrationService {
+    @Autowired
+    private KafkaTemplate&lt;String, UserEvent&gt; kafka;
+
+    @Transactional
+    public void register(User user) {
+        userRepo.save(user);
+        kafka.send("user-registered", new UserEvent(user.getId(), user.getEmail()));
+        // Всё! Дальше — забота других сервисов
+    }
+}
+
+// Сервис B — слушаем и отправляем email
+@Service
+public class EmailListener {
+    @KafkaListener(topics = "user-registered")
+    public void onUserRegistered(UserEvent event) {
+        emailService.sendWelcome(event.getEmail());
+        // Если упало — Kafka сохранит offset и повторит
+    }
+}</pre>
+
+        <h3>@Async vs Очереди:</h3>
+        <table>
+            <tr><th></th><th>@Async</th><th>Kafka/RabbitMQ</th></tr>
+            <tr><td>Надёжность</td><td>❌ Потеряется при падении</td><td>✅ Сохраняется на диск</td></tr>
+            <tr><td>Масштабирование</td><td>Один сервер</td><td>Много серверов</td></tr>
+            <tr><td>Сложность</td><td>Просто</td><td>Сложнее</td></tr>
+            <tr><td>Когда</td><td>Некритичные задачи</td><td>Важные задачи, высокая нагрузка</td></tr>
+        </table>
+
+        <!-- Полная архитектура -->
+        <h2>Архитектура high-load системы (целиком)</h2>
+        <pre>                    CDN (Cloudflare)
+                           ↓
+                    Балансировщик (Nginx)
+                           ↓
+        ┌──────────────────┼──────────────────┐
+        ↓                  ↓                  ↓
+    Сервер 1           Сервер 2           Сервер 3
+    (Spring App)       (Spring App)       (Spring App)
+        ↓                  ↓                  ↓
+        └──────────────────┼──────────────────┘
+                           ↓
+                    ┌──────┴──────┐
+                    ↓              ↓
+              Мастер БД       Реплика БД
+              (запись)        (чтение)
+                    ↓
+              Redis (кеш горячих данных: сессии, частые запросы)
+                    ↓
+              Kafka (асинхронные задачи: email, отчёты, уведомления)
+                    ↓
+              Elasticsearch (полнотекстовый поиск по товарам, статьям)
+                    ↓
+              S3 / MinIO (файлы, изображения)</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что такое горизонтальное масштабирование?</li>
+            <li>В чём суть CQRS? Зачем разделять чтение и запись?</li>
+            <li>Какие уровни кеширования бывают?</li>
+            <li>Когда использовать @Async, а когда Kafka?</li>
+            <li>Почему приложение должно быть stateless для масштабирования?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Архитектура high-load</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

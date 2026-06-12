@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kotlin для Java-разработчика | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>💜 Kotlin для Java-разработчика</h1>
+
+        <div class="note">Kotlin — современный язык от JetBrains. На 100% совместим с Java (компилируется в тот же байт-код). Лаконичнее Java на 30-40%. Spring официально поддерживает Kotlin.</div>
+
+        <!-- Сравнение -->
+        <h2>Java vs Kotlin — первое впечатление</h2>
+        <pre>// Java
+public class User {
+    private String name;
+    private int age;
+
+    public User(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+
+    @Override
+    public String toString() {
+        return "User{name='" + name + "', age=" + age + "}";
+    }
+}
+
+// Kotlin — ВСЁ ТО ЖЕ САМОЕ в одну строку!
+data class User(val name: String, val age: Int)
+// data class автоматически даёт: конструктор, геттеры, сеттеры (для var),
+// equals(), hashCode(), toString(), copy()</pre>
+
+        <div class="answer-block">
+            Kotlin — современный JVM-язык от JetBrains. Полностью совместим с Java: можно вызывать Kotlin из Java и наоборот. Код на Kotlin на 30-40% короче. Главные фичи: null safety, data class, extension functions, coroutines. Spring Boot официально поддерживает Kotlin.
+        </div>
+
+        <!-- Переменные -->
+        <h2>val vs var — неизменяемые и изменяемые переменные</h2>
+        <pre>val name = "Иван"       // val = final в Java (нельзя переприсвоить)
+// name = "Пётр"        // ❌ Ошибка!
+
+var age = 25            // var = обычная переменная (можно менять)
+age = 26                // ✅
+
+// Тип выводится автоматически, но можно указать явно
+val city: String = "Москва"
+val count: Int = 42
+
+// ВСЁ — объекты (нет примитивов), но компилятор оптимизирует в int/long</pre>
+
+        <!-- Null safety -->
+        <h2>Null Safety — главная фишка Kotlin</h2>
+        <p>Типы делятся на <b>nullable</b> и <b>non-null</b>. Компилятор не даст допустить NullPointerException.</p>
+
+        <pre>var name: String = "Иван"   // non-null — не может быть null
+// name = null                // ❌ Ошибка компиляции!
+
+var nickname: String? = null // nullable — может быть null (знак вопроса!)
+nickname = "Ваня"            // ✅
+nickname = null              // ✅
+
+// Безопасный вызов (?.) — выполнится только если не null
+println(nickname?.length)    // null (не краш!)
+
+// Оператор "Элвис" (?:) — значение по умолчанию если null
+val len = nickname?.length ?: 0  // если null → 0
+
+// Утверждение "я уверен, что не null" (!!) — опасно!
+val forced = nickname!!.length  // краш если null! Аналог Java-поведения</pre>
+
+        <!-- Функции -->
+        <h2>Функции — компактный синтаксис</h2>
+        <pre>// Обычная функция
+fun sum(a: Int, b: Int): Int {
+    return a + b
+}
+
+// Однострочная функция (return не нужен)
+fun sumShort(a: Int, b: Int) = a + b
+
+// Параметры по умолчанию (в Java такого нет!)
+fun greet(name: String = "Гость", greeting: String = "Привет") {
+    println("$greeting, $name!")
+}
+
+greet()                     // Привет, Гость!
+greet("Иван")              // Привет, Иван!
+greet(greeting = "Здравствуй", name = "Мария") // Именованные аргументы
+
+// Строковые шаблоны ($)
+val name = "Мир"
+println("Привет, $name!")           // Привет, Мир!
+println("Сумма: ${sum(2, 3)}")      // Сумма: 5</pre>
+
+        <!-- Классы -->
+        <h2>Классы и data class</h2>
+        <pre>// Обычный класс
+class Person(val name: String, var age: Int) {
+    fun introduce() = "Меня зовут $name, мне $age лет"
+}
+
+// data class — автоматически equals, hashCode, toString, copy
+data class User(val id: Long, val name: String, val email: String)
+
+val user1 = User(1, "Иван", "ivan@mail.ru")
+val user2 = User(1, "Иван", "ivan@mail.ru")
+println(user1 == user2)  // true (сравнение по значению, не по ссылке!)
+println(user1)           // User(id=1, name=Иван, email=ivan@mail.ru)
+
+// copy — копия с изменениями
+val updated = user1.copy(name = "Пётр") // User(id=1, Пётр, ivan@mail.ru)</pre>
+
+        <!-- Extension functions -->
+        <h2>Extension Functions — расширение существующих классов</h2>
+        <p>Можно добавить метод к ЛЮБОМУ классу, даже если у тебя нет его исходников!</p>
+
+        <pre>// Добавляем метод repeat к String
+fun String.repeat(n: Int): String {
+    val sb = StringBuilder()
+    for (i in 1..n) sb.append(this)
+    return sb.toString()
+}
+
+println("Java".repeat(3)) // JavaJavaJava
+
+// Добавляем метод isEven к Int
+fun Int.isEven() = this % 2 == 0
+
+println(10.isEven()) // true
+println(7.isEven())  // false
+
+// В Java это выглядело бы как StringUtils.repeat(str, n)
+// В Kotlin — прямо на объекте: str.repeat(n)</pre>
+
+        <!-- when -->
+        <h2>when — улучшенный switch</h2>
+        <pre>// Kotlin
+val result = when (x) {
+    1 -> "один"
+    2, 3 -> "два или три"
+    in 4..10 -> "от 4 до 10"
+    else -> "что-то другое"
+}
+
+// when без аргумента — замена цепочки if-else
+val description = when {
+    age < 18 -> "ребёнок"
+    age in 18..65 -> "взрослый"
+    else -> "пенсионер"
+}</pre>
+
+        <!-- Coroutines -->
+        <h2>Coroutines — асинхронность без боли</h2>
+        <p>Аналог CompletableFuture/WebFlux в Java, но намного проще. Код выглядит как синхронный, а работает асинхронно.</p>
+
+        <pre>// Kotlin + coroutines
+suspend fun fetchUser(id: Long): User {
+    delay(1000) // неблокирующая пауза (поток не спит!)
+    return User(id, "Иван", "ivan@mail.ru")
+}
+
+suspend fun fetchOrders(userId: Long): List<Order> {
+    delay(500)
+    return listOf(Order(1, 100.0), Order(2, 200.0))
+}
+
+// Запуск: как будто синхронный код, но выполняется асинхронно!
+runBlocking {
+    val user = async { fetchUser(1) }
+    val orders = async { fetchOrders(1) }
+    println(user.await())  // ждём результат
+    println(orders.await())
+}
+
+// В Java аналогичное:
+// CompletableFuture<User> user = CompletableFuture.supplyAsync(() -> fetchUser(1));
+// CompletableFuture<List<Order>> orders = CompletableFuture.supplyAsync(() -> fetchOrders(1));
+// user.thenCombine(orders, (u, o) -> ...) — гораздо сложнее!</pre>
+
+        <!-- Kotlin + Spring Boot -->
+        <h2>Kotlin + Spring Boot</h2>
+        <pre>// Spring Boot отлично работает с Kotlin!
+@RestController
+@RequestMapping("/api/users")
+class UserController(
+    private val userService: UserService  // конструкторная инъекция
+) {
+    @GetMapping
+    fun getAll(): List<User> = userService.findAll()
+
+    @GetMapping("/{id}")
+    fun getById(@PathVariable id: Long): User =
+        userService.findById(id) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    fun create(@RequestBody @Valid user: CreateUserRequest): User =
+        userService.create(user)
+}</pre>
+
+        <!-- Совместимость -->
+        <h2>Совместимость Java и Kotlin</h2>
+        <pre>// Вызов Kotlin из Java:
+User user = new User("Иван", 25);
+String name = user.getName();
+
+// Вызов Java из Kotlin:
+val list = ArrayList&lt;String&gt;()
+list.add("Java")
+list.add("Kotlin")
+
+// В одном проекте могут быть и .java, и .kt файлы!</pre>
+
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Чем val отличается от var?</li>
+            <li>Что такое nullable-типы и как Kotlin защищает от NPE?</li>
+            <li>Что даёт data class по сравнению с обычным классом?</li>
+            <li>Что такое extension functions?</li>
+            <li>В чём преимущество coroutines перед CompletableFuture?</li>
+        </ol>
+
+    </main>
+    <footer class="footer"><p>📱 Java Mentor · Kotlin</p></footer>
+    <script src="../js/script.js"></script>
+</body>
+</html>

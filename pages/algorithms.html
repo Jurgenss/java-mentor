@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Алгоритмы для собеса | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .task-block {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .task-block h3 {
+            color: var(--heading);
+            font-size: 18px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .task-block.collapsed .task-content { display: none; }
+        .task-block h3 .toggle-icon {
+            font-size: 14px; transition: transform 0.2s; display: inline-block;
+        }
+        .task-block.collapsed h3 .toggle-icon { transform: rotate(-90deg); }
+        .level {
+            display: inline-block; padding: 2px 8px; border-radius: 10px;
+            font-size: 11px; font-weight: 600; margin-left: 8px;
+        }
+        .level-easy { background: var(--accent); color: #fff; }
+        .level-medium { background: var(--heading); color: #fff; }
+        .level-hard { background: var(--danger); color: #fff; }
+
+        /* Секция самопроверки */
+        .self-check {
+            background: #fef9e7;
+            border: 2px dashed #f39c12;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 14px 0;
+        }
+        .dark .self-check {
+            background: #2d2410;
+            border-color: #f39c12;
+        }
+        .self-check h4 { color: #e67e22; margin-bottom: 8px; }
+        .self-check .editor-hint {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 12px;
+            color: #999;
+            min-height: 80px;
+            white-space: pre-wrap;
+            margin-bottom: 10px;
+        }
+        .dark .self-check .editor-hint {
+            background: #1a1a2e;
+            border-color: #555;
+            color: #888;
+        }
+        .self-check textarea {
+            width: 100%;
+            min-height: 100px;
+            background: #fffdf5;
+            border: 1px solid #e0c36a;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 12px;
+            resize: vertical;
+            color: #333;
+        }
+        .dark .self-check textarea {
+            background: #1e293b;
+            border-color: #f39c12;
+            color: #e2e8f0;
+        }
+        .btn-check {
+            background: var(--subheading);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 6px 4px 6px 0;
+        }
+        .btn-check:hover { opacity: 0.85; }
+        .btn-show-solution {
+            background: var(--heading);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 6px 4px 6px 0;
+        }
+        .solution-block {
+            display: none;
+            margin-top: 12px;
+            background: var(--pre-bg);
+            border-radius: 10px;
+            padding: 12px;
+        }
+        .solution-block.show { display: block; }
+        .test-result {
+            margin-top: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .test-pass { color: var(--accent); }
+        .test-fail { color: var(--danger); }
+        .nav-tasks {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
+        }
+        .nav-tasks a {
+            background: var(--card); border: 1px solid var(--border);
+            padding: 6px 14px; border-radius: 20px; text-decoration: none;
+            color: var(--subheading); font-size: 13px; font-weight: 600;
+        }
+        .nav-tasks a:hover { background: var(--subheading); color: #fff; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🧠 Алгоритмические задачи для собеса</h1>
+        <div class="note">В каждой задаче — поле для твоего кода. Напиши решение и проверь себя. Если не получается — подсмотри решение.</div>
+
+        <div class="nav-tasks">
+            <a href="#palindrome">Палиндром</a>
+            <a href="#anagram">Анаграмма</a>
+            <a href="#reverse">Разворот строки</a>
+            <a href="#duplicates">Дубликаты</a>
+            <a href="#fizzbuzz">FizzBuzz</a>
+            <a href="#twosum">Two Sum</a>
+            <a href="#factorial">Факториал</a>
+            <a href="#fibonacci">Фибоначчи</a>
+            <a href="#binarysearch">Бинарный поиск</a>
+            <a href="#brackets">Скобки</a>
+        </div>
+
+        <!-- ==================== 1. ПАЛИНДРОМ ==================== -->
+        <div class="task-block" id="palindrome">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                1. Палиндром <span class="level level-easy">easy</span> <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="task-content">
+                <p><b>Задача:</b> проверить, читается ли строка одинаково в обоих направлениях (без учёта пробелов и регистра).</p>
+                <p><b>Примеры:</b> <code>"казак" → true</code>, <code>"Java" → false</code>, <code>"А роза упала на лапу Азора" → true</code></p>
+
+                <div class="self-check">
+                    <h4>✍️ Твоё решение:</h4>
+                    <div class="editor-hint">public static boolean isPalindrome(String s) {
+    // твой код здесь
+}</div>
+                    <textarea id="code-palindrome" placeholder="Вставь свой код сюда..."></textarea>
+                    <button class="btn-check" onclick="testPalindrome()">▶ Проверить</button>
+                    <button class="btn-show-solution" onclick="document.getElementById('sol-palindrome').classList.toggle('show'); this.textContent = document.getElementById('sol-palindrome').classList.contains('show') ? 'Скрыть решение' : 'Показать решение';">Показать решение</button>
+                    <div id="result-palindrome" class="test-result"></div>
+                    <div id="sol-palindrome" class="solution-block">
+                        <pre>public static boolean isPalindrome(String s) {
+    String cleaned = s.replaceAll("[^a-zA-Zа-яА-Я0-9]", "").toLowerCase();
+    int left = 0;
+    int right = cleaned.length() - 1;
+    while (left < right) {
+        if (cleaned.charAt(left) != cleaned.charAt(right)) return false;
+        left++;
+        right--;
+    }
+    return true;
+}</pre>
+                        <p><b>Сложность:</b> O(n), память O(1).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 2. АНАГРАММА ==================== -->
+        <div class="task-block collapsed" id="anagram">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                2. Анаграмма <span class="level level-easy">easy</span> <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="task-content">
+                <p><b>Задача:</b> проверить, состоят ли две строки из одинаковых символов (регистр не важен).</p>
+                <p><b>Примеры:</b> <code>"listen", "silent" → true</code>, <code>"hello", "world" → false</code></p>
+
+                <div class="self-check">
+                    <h4>✍️ Твоё решение:</h4>
+                    <div class="editor-hint">public static boolean isAnagram(String s1, String s2) {
+    // твой код здесь
+}</div>
+                    <textarea id="code-anagram" placeholder="Вставь свой код сюда..."></textarea>
+                    <button class="btn-check" onclick="testAnagram()">▶ Проверить</button>
+                    <button class="btn-show-solution" onclick="document.getElementById('sol-anagram').classList.toggle('show'); this.textContent = document.getElementById('sol-anagram').classList.contains('show') ? 'Скрыть решение' : 'Показать решение';">Показать решение</button>
+                    <div id="result-anagram" class="test-result"></div>
+                    <div id="sol-anagram" class="solution-block">
+                        <pre>public static boolean isAnagram(String s1, String s2) {
+    if (s1.length() != s2.length()) return false;
+    s1 = s1.toLowerCase(); s2 = s2.toLowerCase();
+    int[] counts = new int[26];
+    for (char c : s1.toCharArray()) counts[c - 'a']++;
+    for (char c : s2.toCharArray()) counts[c - 'a']--;
+    for (int n : counts) if (n != 0) return false;
+    return true;
+}</pre>
+                        <p><b>Сложность:</b> O(n), память O(1).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 3. РАЗВОРОТ СТРОКИ ==================== -->
+        <div class="task-block collapsed" id="reverse">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                3. Разворот строки <span class="level level-easy">easy</span> <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="task-content">
+                <p><b>Задача:</b> перевернуть строку без StringBuilder.reverse().</p>
+                <p><b>Пример:</b> <code>"Java" → "avaJ"</code></p>
+
+                <div class="self-check">
+                    <h4>✍️ Твоё решение:</h4>
+                    <div class="editor-hint">public static String reverse(String s) {
+    // твой код здесь
+}</div>
+                    <textarea id="code-reverse" placeholder="Вставь свой код сюда..."></textarea>
+                    <button class="btn-check" onclick="testReverse()">▶ Проверить</button>
+                    <button class="btn-show-solution" onclick="document.getElementById('sol-reverse').classList.toggle('show'); this.textContent = document.getElementById('sol-reverse').classList.contains('show') ? 'Скрыть решение' : 'Показать решение';">Показать решение</button>
+                    <div id="result-reverse" class="test-result"></div>
+                    <div id="sol-reverse" class="solution-block">
+                        <pre>public static String reverse(String s) {
+    char[] chars = s.toCharArray();
+    int left = 0, right = chars.length - 1;
+    while (left < right) {
+        char temp = chars[left];
+        chars[left] = chars[right];
+        chars[right] = temp;
+        left++; right--;
+    }
+    return new String(chars);
+}</pre>
+                        <p><b>Сложность:</b> O(n).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 4. ДУБЛИКАТЫ ==================== -->
+        <div class="task-block collapsed" id="duplicates">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                4. Поиск дубликатов <span class="level level-easy">easy</span> <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="task-content">
+                <p><b>Задача:</b> найти все дубликаты в массиве.</p>
+                <p><b>Пример:</b> <code>[1, 2, 3, 2, 1, 4] → [1, 2]</code></p>
+
+                <div class="self-check">
+                    <h4>✍️ Твоё решение:</h4>
+                    <div class="editor-hint">public static List&lt;Integer&gt; findDuplicates(int[] arr) {
+    // твой код здесь
+}</div>
+                    <textarea id="code-duplicates" placeholder="Вставь свой код сюда..."></textarea>
+                    <button class="btn-check" onclick="testDuplicates()">▶ Проверить</button>
+                    <button class="btn-show-solution" onclick="document.getElementById('sol-duplicates').classList.toggle('show'); this.textContent = document.getElementById('sol-duplicates').classList.contains('show') ? 'Скрыть решение' : 'Показать решение';">Показать решение</button>
+                    <div id="result-duplicates" class="test-result"></div>
+                    <div id="sol-duplicates" class="solution-block">
+                        <pre>public static List&lt;Integer&gt; findDuplicates(int[] arr) {
+    Set&lt;Integer&gt; seen = new HashSet&lt;&gt;();
+    Set&lt;Integer&gt; dups = new HashSet&lt;&gt;();
+    for (int n : arr) if (!seen.add(n)) dups.add(n);
+    return new ArrayList&lt;&gt;(dups);
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 5. FIZZBUZZ ==================== -->
+        <div class="task-block collapsed" id="fizzbuzz">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                5. FizzBuzz <span class="level level-easy">easy</span> <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="task-content">
+                <p><b>Задача:</b> вывести числа 1..100. Кратно 3 → "Fizz", 5 → "Buzz", 3 и 5 → "FizzBuzz".</p>
+
+                <div class="self-check">
+                    <h4>✍️ Твоё решение:</h4>
+                    <div class="editor-hint">public static void fizzBuzz() {
+    // твой код здесь
+}</div>
+                    <textarea id="code-fizzbuzz" placeholder="Вставь свой код сюда..."></textarea>
+                    <button class="btn-check" onclick="testFizzBuzz()">▶ Проверить</button>
+                    <button class="btn-show-solution" onclick="document.getElementById('sol-fizzbuzz').classList.toggle('show'); this.textContent = document.getElementById('sol-fizzbuzz').classList.contains('show') ? 'Скрыть решение' : 'Показать решение';">Показать решение</button>
+                    <div id="result-fizzbuzz" class="test-result"></div>
+                    <div id="sol-fizzbuzz" class="solution-block">
+                        <pre>for (int i = 1; i <= 100; i++) {
+    if (i % 15 == 0) System.out.println("FizzBuzz");
+    else if (i % 3 == 0) System.out.println("Fizz");
+    else if (i % 5 == 0) System.out.println("Buzz");
+    else System.out.println(i);
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 6. TWO SUM ==================== -->
+        <div class="task-block collapsed" id="twosum">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                6. Two Sum <span class="level level-medium">medium</span> <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="task-content">
+                <p><b>Задача (LeetCode 1):</b> найти индексы двух чисел, дающих в сумме target.</p>
+                <p><b>Пример:</b> <code>nums = [2,7,11,15], target = 9 → [0,1]</code></p>
+
+                <div class="self-check">
+                    <h4>✍️ Твоё решение:</h4>
+                    <div class="editor-hint">public static int[] twoSum(int[] nums, int target) {
+    // твой код здесь
+}</div>
+                    <textarea id="code-twosum" placeholder="Вставь свой код сюда..."></textarea>
+                    <button class="btn-check" onclick="testTwoSum()">▶ Проверить</button>
+                    <button class="btn-show-solution" onclick="document.getElementById('sol-twosum').classList.toggle('show'); this.textContent = document.getElementById('sol-twosum').classList.contains('show') ? 'Скрыть решение' : 'Показать решение';">Показать решение</button>
+                    <div id="result-twosum" class="test-result"></div>
+                    <div id="sol-twosum" class="solution-block">
+                        <pre>public static int[] twoSum(int[] nums, int target) {
+    Map&lt;Integer, Integer&gt; map = new HashMap&lt;&gt;();
+    for (int i = 0; i < nums.length; i++) {
+        int comp = target - nums[i];
+        if (map.containsKey(comp)) return new int[]{map.get(comp), i};
+        map.put(nums[i], i);
+    }
+    throw new IllegalArgumentException("Нет решения");
+}</pre>
+                        <p><b>Сложность:</b> O(n).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 7. ФАКТОРИАЛ ==================== -->
+        <div class="task-block collapsed" id="factorial">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                7. Факториал <span class="level level-easy">easy</span> <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="task-content">
+                <p><b>Задача:</b> вычислить n! итеративно и рекурсивно.</p>
+
+                <div class="self-check">
+                    <h4>✍️ Твоё решение:</h4>
+                    <div class="editor-hint">public static long factorial(int n) {
+    // твой код здесь (итеративно или рекурсивно)
+}</div>
+                    <textarea id="code-factorial" placeholder="Вставь свой код сюда..."></textarea>
+                    <button class="btn-check" onclick="testFactorial()">▶ Проверить</button>
+                    <button class="btn-show-solution" onclick="document.getElementById('sol-factorial').classList.toggle('show'); this.textContent = document.getElementById('sol-factorial').classList.contains('show') ? 'Скрыть решение' : 'Показать решение';">Показать решение</button>
+                    <div id="result-factorial" class="test-result"></div>
+                    <div id="sol-factorial" class="solution-block">
+                        <pre>// Итеративно
+public static long factorial(int n) {
+    long result = 1;
+    for (int i = 2; i <= n; i++) result *= i;
+    return result;
+}
+// Рекурсивно
+public static long factorialRec(int n) {
+    return n <= 1 ? 1 : n * factorialRec(n - 1);
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 8. ФИБОНАЧЧИ ==================== -->
+        <div class="task-block collapsed" id="fibonacci">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                8. Числа Фибоначчи <span class="level level-medium">medium</span> <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="task-content">
+                <p><b>Задача:</b> вернуть n-е число Фибоначчи (0,1,1,2,3,5,8...).</p>
+
+                <div class="self-check">
+                    <h4>✍️ Твоё решение:</h4>
+                    <div class="editor-hint">public static long fibonacci(int n) {
+    // твой код здесь
+}</div>
+                    <textarea id="code-fibonacci" placeholder="Вставь свой код сюда..."></textarea>
+                    <button class="btn-check" onclick="testFibonacci()">▶ Проверить</button>
+                    <button class="btn-show-solution" onclick="document.getElementById('sol-fibonacci').classList.toggle('show'); this.textContent = document.getElementById('sol-fibonacci').classList.contains('show') ? 'Скрыть решение' : 'Показать решение';">Показать решение</button>
+                    <div id="result-fibonacci" class="test-result"></div>
+                    <div id="sol-fibonacci" class="solution-block">
+                        <pre>public static long fibonacci(int n) {
+    if (n <= 1) return n;
+    long prev = 0, curr = 1;
+    for (int i = 2; i <= n; i++) {
+        long next = prev + curr;
+        prev = curr;
+        curr = next;
+    }
+    return curr;
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 9. БИНАРНЫЙ ПОИСК ==================== -->
+        <div class="task-block collapsed" id="binarysearch">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                9. Бинарный поиск <span class="level level-medium">medium</span> <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="task-content">
+                <p><b>Задача:</b> найти индекс элемента в отсортированном массиве.</p>
+                <p><b>Пример:</b> <code>arr = [1,3,5,7,9], target = 5 → 2</code></p>
+
+                <div class="self-check">
+                    <h4>✍️ Твоё решение:</h4>
+                    <div class="editor-hint">public static int binarySearch(int[] arr, int target) {
+    // твой код здесь
+}</div>
+                    <textarea id="code-binarysearch" placeholder="Вставь свой код сюда..."></textarea>
+                    <button class="btn-check" onclick="testBinarySearch()">▶ Проверить</button>
+                    <button class="btn-show-solution" onclick="document.getElementById('sol-binarysearch').classList.toggle('show'); this.textContent = document.getElementById('sol-binarysearch').classList.contains('show') ? 'Скрыть решение' : 'Показать решение';">Показать решение</button>
+                    <div id="result-binarysearch" class="test-result"></div>
+                    <div id="sol-binarysearch" class="solution-block">
+                        <pre>public static int binarySearch(int[] arr, int target) {
+    int left = 0, right = arr.length - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (arr[mid] == target) return mid;
+        else if (arr[mid] < target) left = mid + 1;
+        else right = mid - 1;
+    }
+    return -1;
+}</pre>
+                        <p><b>Сложность:</b> O(log n).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 10. СКОБКИ ==================== -->
+        <div class="task-block collapsed" id="brackets">
+            <h3 onclick="this.parentElement.classList.toggle('collapsed')">
+                10. Правильные скобки <span class="level level-medium">medium</span> <span class="toggle-icon">▼</span>
+            </h3>
+            <div class="task-content">
+                <p><b>Задача (LeetCode 20):</b> проверить правильность скобок <code>() [] {}</code>.</p>
+                <p><b>Примеры:</b> <code>"()[]{}" → true</code>, <code>"([)]" → false</code></p>
+
+                <div class="self-check">
+                    <h4>✍️ Твоё решение:</h4>
+                    <div class="editor-hint">public static boolean isValid(String s) {
+    // твой код здесь
+}</div>
+                    <textarea id="code-brackets" placeholder="Вставь свой код сюда..."></textarea>
+                    <button class="btn-check" onclick="testBrackets()">▶ Проверить</button>
+                    <button class="btn-show-solution" onclick="document.getElementById('sol-brackets').classList.toggle('show'); this.textContent = document.getElementById('sol-brackets').classList.contains('show') ? 'Скрыть решение' : 'Показать решение';">Показать решение</button>
+                    <div id="result-brackets" class="test-result"></div>
+                    <div id="sol-brackets" class="solution-block">
+                        <pre>public static boolean isValid(String s) {
+    Stack&lt;Character&gt; stack = new Stack&lt;&gt;();
+    for (char c : s.toCharArray()) {
+        if (c == '(' || c == '[' || c == '{') { stack.push(c); }
+        else {
+            if (stack.isEmpty()) return false;
+            char top = stack.pop();
+            if (c == ')' && top != '(') return false;
+            if (c == ']' && top != '[') return false;
+            if (c == '}' && top != '{') return false;
+        }
+    }
+    return stack.isEmpty();
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Алгоритмы для собеса</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+    <script>
+        // Функции проверки для каждой задачи
+        function testPalindrome() {
+            const result = document.getElementById('result-palindrome');
+            result.innerHTML = '<span class="test-pass">✅ Проверь в IDE:</span> <code>isPalindrome("казак") → true</code>, <code>isPalindrome("Java") → false</code>, <code>isPalindrome("А роза упала на лапу Азора") → true</code>';
+        }
+        function testAnagram() {
+            const result = document.getElementById('result-anagram');
+            result.innerHTML = '<span class="test-pass">✅ Проверь в IDE:</span> <code>isAnagram("listen","silent") → true</code>, <code>isAnagram("hello","world") → false</code>';
+        }
+        function testReverse() {
+            const result = document.getElementById('result-reverse');
+            result.innerHTML = '<span class="test-pass">✅ Проверь в IDE:</span> <code>reverse("Java") → "avaJ"</code>, <code>reverse("abc") → "cba"</code>';
+        }
+        function testDuplicates() {
+            const result = document.getElementById('result-duplicates');
+            result.innerHTML = '<span class="test-pass">✅ Проверь в IDE:</span> <code>findDuplicates([1,2,3,2,1,4]) → [1,2]</code>';
+        }
+        function testFizzBuzz() {
+            const result = document.getElementById('result-fizzbuzz');
+            result.innerHTML = '<span class="test-pass">✅ Проверь в IDE:</span> вывод для 1..15: <code>1,2,Fizz,4,Buzz,Fizz,7,8,Fizz,Buzz,11,Fizz,13,14,FizzBuzz</code>';
+        }
+        function testTwoSum() {
+            const result = document.getElementById('result-twosum');
+            result.innerHTML = '<span class="test-pass">✅ Проверь в IDE:</span> <code>twoSum([2,7,11,15],9) → [0,1]</code>, <code>twoSum([3,2,4],6) → [1,2]</code>';
+        }
+        function testFactorial() {
+            const result = document.getElementById('result-factorial');
+            result.innerHTML = '<span class="test-pass">✅ Проверь в IDE:</span> <code>factorial(5) → 120</code>, <code>factorial(0) → 1</code>';
+        }
+        function testFibonacci() {
+            const result = document.getElementById('result-fibonacci');
+            result.innerHTML = '<span class="test-pass">✅ Проверь в IDE:</span> <code>fibonacci(0)=0, fibonacci(1)=1, fibonacci(7)=13, fibonacci(10)=55</code>';
+        }
+        function testBinarySearch() {
+            const result = document.getElementById('result-binarysearch');
+            result.innerHTML = '<span class="test-pass">✅ Проверь в IDE:</span> <code>binarySearch([1,3,5,7,9],5) → 2</code>, <code>binarySearch([1,3,5,7,9],10) → -1</code>';
+        }
+        function testBrackets() {
+            const result = document.getElementById('result-brackets');
+            result.innerHTML = '<span class="test-pass">✅ Проверь в IDE:</span> <code>isValid("()[]{}") → true</code>, <code>isValid("([)]") → false</code>, <code>isValid("{[]}") → true</code>';
+        }
+    </script>
+</body>
+</html>

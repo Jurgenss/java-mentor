@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лямбды | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🎯 Лямбды и функциональные интерфейсы</h1>
+
+        <div class="note">Лямбды появились в Java 8 и полностью изменили стиль написания кода. Теперь это база.</div>
+
+        <!-- Что такое лямбда -->
+        <h2>Что такое лямбда-выражение</h2>
+        <p>Лямбда — это <b>компактный способ передать поведение</b> (функцию) как параметр. Замена анонимным классам с одним методом.</p>
+
+        <pre>// Было — анонимный класс (громоздко)
+Runnable r1 = new Runnable() {
+    @Override
+    public void run() {
+        System.out.println("Привет!");
+    }
+};
+
+// Стало — лямбда (компактно)
+Runnable r2 = () -> System.out.println("Привет!");</pre>
+
+        <div class="answer-block">
+            Лямбда — компактный способ передать функцию как параметр. Заменяет анонимный класс с одним методом. Синтаксис: <code>(параметры) -> { тело }</code>.
+        </div>
+
+        <!-- Синтаксис -->
+        <h2>Синтаксис лямбда-выражений</h2>
+        <table>
+            <tr><th>Форма</th><th>Синтаксис</th><th>Пример</th></tr>
+            <tr>
+                <td>Без параметров</td>
+                <td><code>() -> действие</code></td>
+                <td><code>() -> System.out.println("Hi")</code></td>
+            </tr>
+            <tr>
+                <td>Один параметр</td>
+                <td><code>x -> действие</code></td>
+                <td><code>x -> x * 2</code></td>
+            </tr>
+            <tr>
+                <td>Несколько параметров</td>
+                <td><code>(a, b) -> действие</code></td>
+                <td><code>(a, b) -> a + b</code></td>
+            </tr>
+            <tr>
+                <td>С типами</td>
+                <td><code>(int a, int b) -> a + b</code></td>
+                <td>Типы можно опускать</td>
+            </tr>
+            <tr>
+                <td>Блок кода</td>
+                <td><code>(a, b) -> { return a + b; }</code></td>
+                <td>Если > 1 строки или return</td>
+            </tr>
+        </table>
+
+        <pre>// Когда скобки и return можно опустить:
+x -> x * 2              // один параметр, одно выражение — без скобок и return
+
+// Когда нужны скобки и return:
+(x, y) -> {             // несколько параметров
+    int sum = x + y;    // несколько строк
+    return sum * 2;     // нужен return
+}
+
+// С типами (обычно избыточно, но бывает нужно для разрешения неоднозначности)
+(int x, int y) -> x + y</pre>
+
+        <!-- Функциональный интерфейс -->
+        <h2>Функциональный интерфейс</h2>
+        <p><b>Функциональный интерфейс</b> — интерфейс с <b>ровно одним абстрактным методом</b> (SAM — Single Abstract Method).</p>
+
+        <pre>@FunctionalInterface  // аннотация — необязательна, но защищает от ошибок
+public interface Calculator {
+    int calculate(int a, int b); // один абстрактный метод
+}
+
+// Использование с лямбдой:
+Calculator sum = (a, b) -> a + b;
+Calculator mult = (a, b) -> a * b;
+
+System.out.println(sum.calculate(3, 5));  // 8
+System.out.println(mult.calculate(3, 5)); // 15</pre>
+
+        <p><b>@FunctionalInterface</b> — аннотация, которая:</p>
+        <ul>
+            <li>Проверяет, что в интерфейсе ровно один абстрактный метод</li>
+            <li>Сигнализирует другим разработчикам: "этот интерфейс для лямбд"</li>
+            <li>default и static методы — не считаются (они уже с телом)</li>
+        </ul>
+
+        <!-- Основные функциональные интерфейсы -->
+        <h2>Основные функциональные интерфейсы (java.util.function)</h2>
+        <table>
+            <tr><th>Интерфейс</th><th>Метод</th><th>Описание</th><th>Пример лямбды</th></tr>
+            <tr>
+                <td><code>Predicate&lt;T&gt;</code></td>
+                <td><code>boolean test(T t)</code></td>
+                <td>Проверка условия (фильтр)</td>
+                <td><code>x -> x > 0</code></td>
+            </tr>
+            <tr>
+                <td><code>Consumer&lt;T&gt;</code></td>
+                <td><code>void accept(T t)</code></td>
+                <td>Действие над объектом</td>
+                <td><code>x -> System.out.println(x)</code></td>
+            </tr>
+            <tr>
+                <td><code>Supplier&lt;T&gt;</code></td>
+                <td><code>T get()</code></td>
+                <td>Поставщик (без параметров)</td>
+                <td><code>() -> new Random().nextInt()</code></td>
+            </tr>
+            <tr>
+                <td><code>Function&lt;T,R&gt;</code></td>
+                <td><code>R apply(T t)</code></td>
+                <td>Преобразование T в R</td>
+                <td><code>x -> x.toString()</code></td>
+            </tr>
+            <tr>
+                <td><code>UnaryOperator&lt;T&gt;</code></td>
+                <td><code>T apply(T t)</code></td>
+                <td>Function где вход = выход</td>
+                <td><code>x -> x * 2</code></td>
+            </tr>
+            <tr>
+                <td><code>BinaryOperator&lt;T&gt;</code></td>
+                <td><code>T apply(T a, T b)</code></td>
+                <td>Бинарная операция</td>
+                <td><code>(a, b) -> a + b</code></td>
+            </tr>
+            <tr>
+                <td><code>BiFunction&lt;T,U,R&gt;</code></td>
+                <td><code>R apply(T t, U u)</code></td>
+                <td>Function с двумя параметрами</td>
+                <td><code>(s, n) -> s + n</code></td>
+            </tr>
+            <tr>
+                <td><code>BiPredicate&lt;T,U&gt;</code></td>
+                <td><code>boolean test(T t, U u)</code></td>
+                <td>Predicate с двумя параметрами</td>
+                <td><code>(a, b) -> a > b</code></td>
+            </tr>
+            <tr>
+                <td><code>BiConsumer&lt;T,U&gt;</code></td>
+                <td><code>void accept(T t, U u)</code></td>
+                <td>Consumer с двумя параметрами</td>
+                <td><code>(k, v) -> print(k, v)</code></td>
+            </tr>
+        </table>
+
+        <h3>Примеры использования:</h3>
+        <pre>Predicate&lt;String&gt; isEmpty = String::isEmpty;
+boolean b = isEmpty.test(""); // true
+
+Consumer&lt;String&gt; printer = System.out::println;
+printer.accept("Привет"); // выведет "Привет"
+
+Supplier&lt;LocalDate&gt; today = LocalDate::now;
+LocalDate date = today.get();
+
+Function&lt;String, Integer&gt; length = String::length;
+int len = length.apply("Java"); // 4
+
+UnaryOperator&lt;Integer&gt; twice = x -> x * 2;
+int result = twice.apply(5); // 10
+
+BinaryOperator&lt;Integer&gt; sum = (a, b) -> a + b;
+int total = sum.apply(3, 5); // 8</pre>
+
+        <!-- Method Reference -->
+        <h2>Method Reference (ссылки на методы)</h2>
+        <p>Ещё более краткая запись лямбды, когда лямбда просто вызывает существующий метод.</p>
+
+        <table>
+            <tr><th>Тип</th><th>Синтаксис</th><th>Лямбда</th><th>Method Reference</th></tr>
+            <tr>
+                <td>Статический метод</td>
+                <td><code>Class::staticMethod</code></td>
+                <td><code>x -> Math.abs(x)</code></td>
+                <td><code>Math::abs</code></td>
+            </tr>
+            <tr>
+                <td>Метод объекта</td>
+                <td><code>obj::method</code></td>
+                <td><code>x -> printer.print(x)</code></td>
+                <td><code>printer::print</code></td>
+            </tr>
+            <tr>
+                <td>Метод класса (1-й параметр — this)</td>
+                <td><code>Class::method</code></td>
+                <td><code>s -> s.toLowerCase()</code></td>
+                <td><code>String::toLowerCase</code></td>
+            </tr>
+            <tr>
+                <td>Конструктор</td>
+                <td><code>Class::new</code></td>
+                <td><code>() -> new ArrayList&lt;&gt;()</code></td>
+                <td><code>ArrayList::new</code></td>
+            </tr>
+        </table>
+
+        <pre>// Примеры Method Reference
+List&lt;String&gt; names = List.of("анна", "иван", "пётр");
+
+// Статический метод
+names.stream().map(String::toUpperCase)  // s -> s.toUpperCase()
+    .forEach(System.out::println);       // s -> System.out.println(s)
+
+// Конструктор
+Supplier&lt;List&lt;String&gt;&gt; listSupplier = ArrayList::new; // () -> new ArrayList<>()
+
+// Сортировка с компаратором через Method Reference
+List&lt;Person&gt; people = ...;
+people.sort(Comparator.comparing(Person::getName)); // p -> p.getName()</pre>
+
+        <!-- Композиция функций -->
+        <h2>Композиция функций (andThen, compose, negate, or)</h2>
+        <pre>// Function: andThen (после) и compose (до)
+Function&lt;String, String&gt; upper = String::toUpperCase;
+Function&lt;String, String&gt; exclaim = s -> s + "!";
+
+Function&lt;String, String&gt; shout = upper.andThen(exclaim);
+shout.apply("java"); // "JAVA!"
+
+Function&lt;String, String&gt; exclaimUpper = exclaim.compose(upper);
+exclaimUpper.apply("java"); // "JAVA!"
+
+// Predicate: and, or, negate
+Predicate&lt;String&gt; notEmpty = s -> !s.isEmpty();
+Predicate&lt;String&gt; startsWithJ = s -> s.startsWith("J");
+
+Predicate&lt;String&gt; notEmptyAndStartsWithJ = notEmpty.and(startsWithJ);
+notEmptyAndStartsWithJ.test("Java"); // true
+notEmptyAndStartsWithJ.test("");     // false
+
+Predicate&lt;String&gt; isNullOrEmpty = s -> s == null || s.isEmpty();
+Predicate&lt;String&gt; isNotNullOrEmpty = isNullOrEmpty.negate(); // отрицание
+
+// Consumer: andThen
+Consumer&lt;String&gt; print = System.out::print;
+Consumer&lt;String&gt; println = System.out::println;
+Consumer&lt;String&gt; printAndPrintln = print.andThen(println);
+printAndPrintln.accept("Привет"); // "ПриветПривет\n"</pre>
+
+        <!-- Замыкание -->
+        <h2>Замыкание (closure) и effectively final</h2>
+        <p>Лямбда может захватывать переменные из внешней области видимости, но они должны быть <b>effectively final</b> (не изменяться после присвоения).</p>
+
+        <pre>String name = "Иван"; // effectively final — не меняется
+
+// ✅ Можно — name не меняется
+Runnable r = () -> System.out.println("Привет, " + name);
+
+// ❌ Нельзя — name изменится, перестанет быть effectively final
+// name = "Пётр"; // ошибка компиляции в лямбде!</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что такое функциональный интерфейс? Сколько в нём может быть методов?</li>
+            <li>Чем лямбда отличается от анонимного класса?</li>
+            <li>Что такое Method Reference и какие виды бывают?</li>
+            <li>Для чего нужны Predicate, Consumer, Supplier, Function?</li>
+            <li>Что значит "effectively final"?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Лямбды</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

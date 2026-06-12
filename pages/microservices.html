@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Микросервисы | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🧩 Микросервисная архитектура</h1>
+
+        <div class="note">Микросервисы — архитектурный стиль, где приложение разбито на независимые сервисы. На собесе на джуна спросят отличия от монолита и основные паттерны.</div>
+
+        <!-- Монолит vs Микросервисы -->
+        <h2>Монолит vs Микросервисы</h2>
+        <table>
+            <tr><th></th><th>Монолит</th><th>Микросервисы</th></tr>
+            <tr><td>Структура</td><td>Одно приложение, один код</td><td>Много независимых сервисов</td></tr>
+            <tr><td>Деплой</td><td>Весь сразу</td><td>Каждый сервис отдельно</td></tr>
+            <tr><td>Масштабирование</td><td>Всё приложение целиком</td><td>Только нагруженные сервисы</td></tr>
+            <tr><td>Технологии</td><td>Один стек</td><td>Разные стеки для разных сервисов</td></tr>
+            <tr><td>База данных</td><td>Одна общая БД</td><td>У каждого сервиса своя БД</td></tr>
+            <tr><td>Команды</td><td>Одна команда</td><td>Независимые команды</td></tr>
+            <tr><td>Отказоустойчивость</td><td>Упало всё → не работает ничего</td><td>Упал один сервис → остальные работают</td></tr>
+        </table>
+
+        <div class="answer-block">
+            В <b>монолите</b> всё приложение — единое целое. Проще разрабатывать и тестировать, но сложнее масштабировать. В <b>микросервисах</b> каждый сервис независим: свой код, своя БД, свой деплой. Можно масштабировать только нагруженные сервисы, но сложнее управлять (нужен Service Discovery, мониторинг, распределённые транзакции).
+        </div>
+
+        <!-- Когда что выбирать -->
+        <h2>Когда что выбирать</h2>
+        <table>
+            <tr><th>Монолит</th><th>Микросервисы</th></tr>
+            <tr><td>✅ Стартап, MVP</td><td>✅ Большая система с множеством модулей</td></tr>
+            <tr><td>✅ Небольшая команда (до 10 чел)</td><td>✅ Много независимых команд</td></tr>
+            <tr><td>✅ Простая бизнес-логика</td><td>✅ Нужно масштабировать части независимо</td></tr>
+            <tr><td>✅ Нет требований к отказоустойчивости</td><td>✅ Высокие требования к доступности</td></tr>
+        </table>
+        <p><b>Золотое правило:</b> начинай с монолита. Разбивай на микросервисы только когда есть реальная потребность.</p>
+
+        <!-- Общение сервисов -->
+        <h2>Как микросервисы общаются между собой</h2>
+        <h3>Синхронно (HTTP/REST)</h3>
+        <pre>// Сервис Заказов вызывает Сервис Пользователей по HTTP
+@Service
+public class OrderService {
+    @Autowired
+    private RestTemplate restTemplate;
+
+    public Order createOrder(OrderRequest request) {
+        // Вызов другого сервиса
+        User user = restTemplate.getForObject(
+            "http://user-service/api/users/" + request.getUserId(),
+            User.class
+        );
+        // создаём заказ...
+    }
+}</pre>
+
+        <h3>Асинхронно (очереди сообщений)</h3>
+        <pre>// Сервис Заказов кидает сообщение в Kafka
+@Service
+public class OrderService {
+    @Autowired
+    private KafkaTemplate&lt;String, OrderEvent&gt; kafka;
+
+    public Order createOrder(OrderRequest request) {
+        Order order = orderRepo.save(new Order(request));
+        kafka.send("order-created", new OrderEvent(order.getId()));
+        // Сервис Уведомлений сам прочитает и отправит email
+        return order;
+    }
+}</pre>
+
+        <h3>Синхронно vs Асинхронно:</h3>
+        <table>
+            <tr><th></th><th>Синхронно (HTTP/gRPC)</th><th>Асинхронно (Kafka/RabbitMQ)</th></tr>
+            <tr><td>Ответ</td><td>Сразу</td><td>Когда-нибудь</td></tr>
+            <tr><td>Связанность</td><td>Сильная (ждём ответ)</td><td>Слабая (отправили и забыли)</td></tr>
+            <tr><td>Отказоустойчивость</td><td>Упал сервис-получатель → ошибка</td><td>Сообщение сохранится и обработается позже</td></tr>
+            <tr><td>Когда</td><td>Нужен ответ прямо сейчас</td><td>Фоновые задачи (email, отчёты)</td></tr>
+        </table>
+
+        <!-- Service Discovery -->
+        <h2>Service Discovery — как сервисы находят друг друга</h2>
+        <p><b>Проблема:</b> сервисов много, они запускаются на разных портах, могут перемещаться. Как сервису А узнать адрес сервиса Б?</p>
+
+        <pre>Без Service Discovery:
+order-service → http://user-service:8081  // жёстко зашит URL
+
+С Service Discovery (Eureka/Consul):
+order-service → спрашивает Eureka: "где user-service?"
+Eureka → отвечает: "вот 3 экземпляра: 192.168.1.10:8081, 192.168.1.11:8081, ..."
+order-service → выбирает один (балансировка) и вызывает</pre>
+
+        <pre>// Spring Cloud + Eureka
+@FeignClient(name = "user-service") // имя сервиса, не URL!
+public interface UserClient {
+    @GetMapping("/api/users/{id}")
+    User getUser(@PathVariable Long id);
+}
+
+// Feign сам спросит Eureka и сделает HTTP-запрос</pre>
+
+        <!-- API Gateway -->
+        <h2>API Gateway — единая точка входа</h2>
+        <p><b>Проблема:</b> фронтенду нужно стучаться в 10 разных сервисов. У каждого свой URL, свой порт.</p>
+        <p><b>Решение:</b> API Gateway (Spring Cloud Gateway) — единая точка входа, которая маршрутизирует запросы.</p>
+
+        <pre>Клиент → http://api.example.com
+              ↓
+        API Gateway
+         /    |    \
+        /     |     \
+   user-svc  order-svc  payment-svc
+
+GET /api/users/123    → маршрутизируется в user-service
+POST /api/orders      → маршрутизируется в order-service</pre>
+
+        <!-- Основные паттерны -->
+        <h2>Основные паттерны микросервисов</h2>
+        <table>
+            <tr><th>Паттерн</th><th>Проблема</th><th>Решение</th></tr>
+            <tr>
+                <td><b>Service Discovery</b></td>
+                <td>Как сервисам найти друг друга?</td>
+                <td>Eureka, Consul, Kubernetes Service</td>
+            </tr>
+            <tr>
+                <td><b>API Gateway</b></td>
+                <td>Куда стучаться фронтенду?</td>
+                <td>Spring Cloud Gateway, Kong, Nginx</td>
+            </tr>
+            <tr>
+                <td><b>Circuit Breaker</b></td>
+                <td>Что делать, если сервис упал?</td>
+                <td>Resilience4j, Hystrix</td>
+            </tr>
+            <tr>
+                <td><b>Config Server</b></td>
+                <td>Где хранить настройки всех сервисов?</td>
+                <td>Spring Cloud Config</td>
+            </tr>
+            <tr>
+                <td><b>Saga</b></td>
+                <td>Как делать транзакции между сервисами?</td>
+                <td>Оркестрация (Kafka) или хореография</td>
+            </tr>
+            <tr>
+                <td><b>CQRS</b></td>
+                <td>Как разделить чтение и запись?</td>
+                <td>Отдельные БД для чтения и записи</td>
+            </tr>
+        </table>
+
+        <!-- Circuit Breaker -->
+        <h2>Circuit Breaker (предохранитель)</h2>
+        <p><b>Проблема:</b> если user-service упал, а order-service продолжает слать запросы — запросы копятся, потоки зависают, order-service тоже падает (каскадный отказ).</p>
+
+        <pre>// Circuit Breaker: если user-service не отвечает 5 раз подряд —
+// перестаём вызывать его на 30 секунд, сразу возвращаем fallback
+
+@CircuitBreaker(name = "userService", fallbackMethod = "getUserFallback")
+public User getUser(Long id) {
+    return userClient.getUser(id);
+}
+
+public User getUserFallback(Long id, Throwable t) {
+    return new User(id, "Неизвестно", "unknown@email"); // заглушка
+}</pre>
+
+        <p><b>Состояния Circuit Breaker:</b></p>
+        <ol>
+            <li><b>CLOSED</b> — всё работает, запросы проходят</li>
+            <li><b>OPEN</b> — сервис упал, запросы не шлём, сразу fallback</li>
+            <li><b>HALF-OPEN</b> — пробуем один запрос: если ок → CLOSED, если ошибка → OPEN</li>
+        </ol>
+
+        <!-- Saga -->
+        <h2>Saga — распределённые транзакции</h2>
+        <p><b>Проблема:</b> в монолите — одна БД, один commit/rollback. В микросервисах — у каждого своя БД. Как откатить изменения в нескольких сервисах?</p>
+
+        <pre>Пример: создание заказа
+1. OrderService: создать заказ (своя БД)
+2. PaymentService: списать деньги (своя БД)
+3. InventoryService: зарезервировать товар (своя БД)
+
+Если на шаге 3 ошибка — нужно откатить шаги 1 и 2!
+
+Решение — Saga (цепочка компенсирующих транзакций):
+- OrderService создал заказ → отправил событие
+- PaymentService списал деньги → отправил событие
+- InventoryService: ОШИБКА! → отправил событие "отмена"
+- PaymentService: вернул деньги (компенсация)
+- OrderService: отменил заказ (компенсация)</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Чем микросервисы отличаются от монолита? Когда что выбирать?</li>
+            <li>Как микросервисы общаются между собой? Синхронно vs асинхронно?</li>
+            <li>Зачем нужен Service Discovery?</li>
+            <li>Что такое Circuit Breaker и какие у него состояния?</li>
+            <li>Как делать транзакции в микросервисах (паттерн Saga)?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Микросервисы</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

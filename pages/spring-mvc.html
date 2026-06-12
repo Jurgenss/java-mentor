@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring MVC | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🌐 Spring MVC</h1>
+
+        <div class="note">Spring MVC — основа веб-приложений на Spring. Даже для джуна важно понимать, как обрабатывается HTTP-запрос и какие аннотации за что отвечают.</div>
+
+        <!-- Как работает -->
+        <h2>Как Spring MVC обрабатывает HTTP-запрос</h2>
+        <pre>1. Запрос приходит на DispatcherServlet (фронт-контроллер)
+2. DispatcherServlet спрашивает HandlerMapping: "Кто обрабатывает GET /users?"
+3. HandlerMapping находит нужный метод в @Controller
+4. DispatcherServlet вызывает этот метод
+5. Метод возвращает ModelAndView (или объект + @ResponseBody)
+6. ViewResolver находит HTML-шаблон (или объект сериализуется в JSON)
+7. Ответ уходит клиенту</pre>
+
+        <div class="answer-block">
+            <b>DispatcherServlet</b> — центральный сервлет Spring MVC. Принимает все HTTP-запросы и распределяет их по контроллерам через HandlerMapping. Контроллер возвращает ModelAndView, ViewResolver находит представление. Для REST API (@RestController) объект сразу сериализуется в JSON.
+        </div>
+
+        <!-- Аннотации -->
+        <h2>Аннотации Spring MVC</h2>
+        <table>
+            <tr><th>Аннотация</th><th>Что делает</th><th>Пример</th></tr>
+            <tr>
+                <td><code>@Controller</code></td>
+                <td>Помечает класс как MVC-контроллер (возвращает View)</td>
+                <td><code>@Controller public class UserController {}</code></td>
+            </tr>
+            <tr>
+                <td><code>@RestController</code></td>
+                <td>@Controller + @ResponseBody — возвращает JSON, не View</td>
+                <td><code>@RestController public class ApiController {}</code></td>
+            </tr>
+            <tr>
+                <td><code>@RequestMapping</code></td>
+                <td>Базовый URL для всех методов контроллера</td>
+                <td><code>@RequestMapping("/api/users")</code></td>
+            </tr>
+            <tr>
+                <td><code>@GetMapping</code></td>
+                <td>GET-запрос</td>
+                <td><code>@GetMapping("/{id}")</code></td>
+            </tr>
+            <tr>
+                <td><code>@PostMapping</code></td>
+                <td>POST-запрос</td>
+                <td><code>@PostMapping</code></td>
+            </tr>
+            <tr>
+                <td><code>@PutMapping</code></td>
+                <td>PUT-запрос</td>
+                <td><code>@PutMapping("/{id}")</code></td>
+            </tr>
+            <tr>
+                <td><code>@DeleteMapping</code></td>
+                <td>DELETE-запрос</td>
+                <td><code>@DeleteMapping("/{id}")</code></td>
+            </tr>
+            <tr>
+                <td><code>@PatchMapping</code></td>
+                <td>PATCH-запрос</td>
+                <td><code>@PatchMapping("/{id}")</code></td>
+            </tr>
+            <tr>
+                <td><code>@PathVariable</code></td>
+                <td>Извлечь переменную из URL: /users/{id}</td>
+                <td><code>@PathVariable Long id</code></td>
+            </tr>
+            <tr>
+                <td><code>@RequestParam</code></td>
+                <td>Извлечь параметр запроса: ?page=1</td>
+                <td><code>@RequestParam int page</code></td>
+            </tr>
+            <tr>
+                <td><code>@RequestBody</code></td>
+                <td>Тело запроса (JSON → Java-объект)</td>
+                <td><code>@RequestBody User user</code></td>
+            </tr>
+            <tr>
+                <td><code>@ResponseBody</code></td>
+                <td>Возвращаемое значение → JSON (не View)</td>
+                <td>Неявно в @RestController</td>
+            </tr>
+            <tr>
+                <td><code>@ResponseStatus</code></td>
+                <td>Указать HTTP-код ответа</td>
+                <td><code>@ResponseStatus(HttpStatus.CREATED)</code></td>
+            </tr>
+            <tr>
+                <td><code>@ModelAttribute</code></td>
+                <td>Связать параметры формы с объектом</td>
+                <td><code>@ModelAttribute User user</code></td>
+            </tr>
+        </table>
+
+        <!-- Полный CRUD-контроллер -->
+        <h2>Полный CRUD-контроллер (REST API)</h2>
+        <pre>@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    // GET /api/users — все пользователи
+    @GetMapping
+    public List&lt;User&gt; getAll() {
+        return userService.findAll();
+    }
+
+    // GET /api/users/123 — один пользователь
+    @GetMapping("/{id}")
+    public User getById(@PathVariable Long id) {
+        return userService.findById(id);
+    }
+
+    // POST /api/users — создать нового
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED) // 201 Created
+    public User create(@RequestBody @Valid User user) {
+        return userService.create(user);
+    }
+
+    // PUT /api/users/123 — обновить целиком
+    @PutMapping("/{id}")
+    public User update(@PathVariable Long id, @RequestBody @Valid User user) {
+        return userService.update(id, user);
+    }
+
+    // PATCH /api/users/123 — частичное обновление
+    @PatchMapping("/{id}")
+    public User patch(@PathVariable Long id, @RequestBody Map&lt;String, Object&gt; fields) {
+        return userService.patch(id, fields);
+    }
+
+    // DELETE /api/users/123 — удалить
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT) // 204 No Content
+    public void delete(@PathVariable Long id) {
+        userService.delete(id);
+    }
+
+    // GET /api/users/search?name=Ivan — поиск по параметру
+    @GetMapping("/search")
+    public List&lt;User&gt; search(@RequestParam String name) {
+        return userService.findByName(name);
+    }
+
+    // GET /api/users?page=0&size=10 — пагинация
+    @GetMapping(params = {"page", "size"})
+    public Page&lt;User&gt; getPage(@RequestParam int page, @RequestParam int size) {
+        return userService.findPage(page, size);
+    }
+}</pre>
+
+        <!-- @RequestParam vs @PathVariable vs @RequestBody -->
+        <h2>@RequestParam vs @PathVariable vs @RequestBody</h2>
+        <table>
+            <tr><th></th><th>Откуда берёт данные</th><th>Пример запроса</th></tr>
+            <tr>
+                <td><code>@PathVariable</code></td>
+                <td>Из URL-пути</td>
+                <td><code>GET /users/<b>123</b></code> → <code>@PathVariable Long id</code></td>
+            </tr>
+            <tr>
+                <td><code>@RequestParam</code></td>
+                <td>Из query-параметров URL</td>
+                <td><code>GET /users<b>?name=Ivan</b></code> → <code>@RequestParam String name</code></td>
+            </tr>
+            <tr>
+                <td><code>@RequestBody</code></td>
+                <td>Из тела запроса (JSON)</td>
+                <td><code>POST /users</code> + JSON в теле → <code>@RequestBody User user</code></td>
+            </tr>
+        </table>
+
+        <pre>// URL: POST /api/users/123/orders?status=NEW
+// Тело: {"amount": 500.00}
+
+@PostMapping("/{userId}/orders")
+public Order createOrder(
+    @PathVariable Long userId,           // 123 (из пути)
+    @RequestParam String status,         // "NEW" (из query)
+    @RequestBody OrderRequest request    // {"amount": 500.00} (из тела)
+) { ... }</pre>
+
+        <!-- Валидация -->
+        <h2>Валидация входящих данных (@Valid)</h2>
+        <pre>// DTO с аннотациями валидации
+public class CreateUserRequest {
+
+    @NotBlank(message = "Имя обязательно")
+    @Size(min = 2, max = 50, message = "Имя должно быть от 2 до 50 символов")
+    private String name;
+
+    @Email(message = "Некорректный email")
+    @NotBlank(message = "Email обязателен")
+    private String email;
+
+    @Min(value = 18, message = "Возраст должен быть >= 18")
+    @Max(value = 150, message = "Возраст должен быть <= 150")
+    private int age;
+}
+
+// В контроллере
+@PostMapping
+@ResponseStatus(HttpStatus.CREATED)
+public User create(@RequestBody @Valid CreateUserRequest request) {
+    return userService.create(request);
+}
+
+// Обработка ошибок валидации
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400
+    public Map&lt;String, String&gt; handleValidation(MethodArgumentNotValidException ex) {
+        Map&lt;String, String&gt; errors = new HashMap&lt;&gt;();
+        ex.getBindingResult().getFieldErrors()
+            .forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
+        return errors;
+    }
+}</pre>
+
+        <!-- PathVariable с регуляркой -->
+        <h2>Продвинутые возможности</h2>
+        <h3>@PathVariable с регулярным выражением</h3>
+        <pre>// Только цифры
+@GetMapping("/{id:\\d+}")
+public User getById(@PathVariable Long id) { ... }
+
+// Только буквы
+@GetMapping("/{username:[a-zA-Z]+}")
+public User getByUsername(@PathVariable String username) { ... }</pre>
+
+        <h3>Необязательный @RequestParam</h3>
+        <pre>// defaultValue — если параметр не передан
+@GetMapping
+public List&lt;User&gt; getUsers(
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size,
+    @RequestParam(required = false) String name // может отсутствовать
+) { ... }</pre>
+
+        <h3>ResponseEntity — полный контроль над ответом</h3>
+        <pre>@GetMapping("/{id}")
+public ResponseEntity&lt;User&gt; getById(@PathVariable Long id) {
+    try {
+        User user = userService.findById(id);
+        return ResponseEntity.ok(user); // 200
+    } catch (UserNotFoundException e) {
+        return ResponseEntity.notFound().build(); // 404
+    }
+}
+
+@PostMapping
+public ResponseEntity&lt;User&gt; create(@RequestBody @Valid User user) {
+    User created = userService.create(user);
+    URI location = ServletUriComponentsBuilder
+        .fromCurrentRequest()
+        .path("/{id}")
+        .buildAndExpand(created.getId())
+        .toUri();
+    return ResponseEntity.created(location).body(created); // 201 + заголовок Location
+}</pre>
+
+        <!-- Передача данных на View -->
+        <h2>Model и ModelAndView (для Thymeleaf/JSP)</h2>
+        <pre>@Controller // не @RestController!
+@RequestMapping("/web/users")
+public class UserWebController {
+
+    @GetMapping
+    public String listUsers(Model model) {
+        List&lt;User&gt; users = userService.findAll();
+        model.addAttribute("users", users);      // передаём данные
+        model.addAttribute("title", "Пользователи");
+        return "users/list";                     // thymeleaf-шаблон: users/list.html
+    }
+
+    @GetMapping("/{id}")
+    public ModelAndView viewUser(@PathVariable Long id) {
+        ModelAndView mav = new ModelAndView("users/view");
+        mav.addObject("user", userService.findById(id));
+        return mav;
+    }
+}</pre>
+
+        <!-- Фильтры и перехватчики -->
+        <h2>Фильтры (Filter) и Перехватчики (Interceptor)</h2>
+        <table>
+            <tr><th></th><th>Filter</th><th>Interceptor</th></tr>
+            <tr><td>Уровень</td><td>Сервлет-контейнер (до DispatcherServlet)</td><td>Spring (после DispatcherServlet)</td></tr>
+            <tr><td>Доступ к</td><td>ServletRequest, ServletResponse</td><td>HttpServletRequest, HttpServletResponse, Handler</td></tr>
+            <tr><td>Когда</td><td>Логирование всех запросов, CORS, сжатие</td><td>Аутентификация, логирование методов</td></tr>
+        </table>
+
+        <pre>// Interceptor
+@Component
+public class LoggingInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, 
+                             HttpServletResponse response, 
+                             Object handler) {
+        System.out.println("→ " + request.getMethod() + " " + request.getRequestURI());
+        return true; // false = прервать запрос
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request,
+                                 HttpServletResponse response,
+                                 Object handler, Exception ex) {
+        System.out.println("← " + response.getStatus());
+    }
+}
+
+// Регистрация
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    @Autowired
+    private LoggingInterceptor loggingInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(loggingInterceptor)
+            .addPathPatterns("/api/**")         // ко всем API
+            .excludePathPatterns("/api/health"); // кроме health-check
+    }
+}</pre>
+
+        <!-- CORS -->
+        <h2>Настройка CORS</h2>
+        <pre>// Глобально
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+            .allowedOrigins("http://localhost:3000") // фронтенд
+            .allowedMethods("GET", "POST", "PUT", "DELETE")
+            .allowedHeaders("*")
+            .allowCredentials(true);
+    }
+}
+
+// Для одного метода
+@CrossOrigin(origins = "http://localhost:3000")
+@GetMapping("/api/users")
+public List&lt;User&gt; getAll() { ... }</pre>
+
+        <!-- Структура проекта -->
+        <h2>Типичная структура Spring Boot проекта</h2>
+        <pre>src/
+ └── main/
+      ├── java/com/example/demo/
+      │    ├── DemoApplication.java          // @SpringBootApplication
+      │    ├── controller/
+      │    │    ├── UserController.java      // REST API
+      │    │    └── UserWebController.java   // Thymeleaf
+      │    ├── service/
+      │    │    ├── UserService.java         // интерфейс
+      │    │    └── UserServiceImpl.java     // реализация
+      │    ├── repository/
+      │    │    └── UserRepository.java      // Spring Data JPA
+      │    ├── model/
+      │    │    ├── User.java                // @Entity
+      │    │    ├── CreateUserRequest.java   // DTO для создания
+      │    │    └── UpdateUserRequest.java   // DTO для обновления
+      │    ├── config/
+      │    │    ├── WebConfig.java           // CORS, Interceptors
+      │    │    └── SecurityConfig.java      // Spring Security
+      │    └── exception/
+      │         ├── UserNotFoundException.java
+      │         └── GlobalExceptionHandler.java  // @RestControllerAdvice
+      │
+      └── resources/
+           ├── application.properties
+           └── templates/                    // Thymeleaf-шаблоны
+                └── users/
+                     ├── list.html
+                     └── view.html</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что такое DispatcherServlet и как он работает?</li>
+            <li>В чём разница между @Controller и @RestController?</li>
+            <li>Когда использовать @RequestParam, а когда @PathVariable?</li>
+            <li>Как вернуть статус 201 Created при создании ресурса?</li>
+            <li>Как обработать ошибки валидации и вернуть 400 с описанием?</li>
+            <li>В чём разница между Filter и Interceptor?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Spring MVC</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

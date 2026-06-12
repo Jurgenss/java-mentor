@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Коллекции | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>📚 Коллекции в Java</h1>
+
+        <div class="note">Коллекции — основа работы с данными. На собесе спросят иерархию, отличия реализаций и устройство HashMap.</div>
+
+        <!-- Иерархия -->
+        <h2>Иерархия коллекций</h2>
+        <pre>Iterable
+ └── Collection
+      ├── List (по индексу, дубликаты ✅)
+      │    ├── ArrayList (массив)
+      │    ├── LinkedList (двусвязный список)
+      │    └── Vector (устаревший, synchronized)
+      ├── Set (уникальные, дубликаты ❌)
+      │    ├── HashSet (нет порядка, O(1))
+      │    ├── LinkedHashSet (порядок вставки)
+      │    └── TreeSet (сортировка, O(log n))
+      └── Queue (FIFO)
+           ├── LinkedList
+           └── PriorityQueue (по приоритету)
+
+Map (НЕ от Collection, отдельно)
+ ├── HashMap (нет порядка, O(1))
+ ├── LinkedHashMap (порядок вставки)
+ ├── TreeMap (сортировка по ключам, O(log n))
+ └── Hashtable (устаревший, synchronized)</pre>
+
+        <!-- Таблица интерфейсов -->
+        <h2>Основные интерфейсы</h2>
+        <table>
+            <tr><th>Интерфейс</th><th>Хранение</th><th>Дубликаты</th><th>Порядок</th><th>Реализации</th></tr>
+            <tr><td><b>List</b></td><td>По индексу</td><td>✅ Да</td><td>Сохраняется</td><td><code>ArrayList</code>, <code>LinkedList</code></td></tr>
+            <tr><td><b>Set</b></td><td>Уникальные</td><td>❌ Нет</td><td>Зависит</td><td><code>HashSet</code>, <code>TreeSet</code></td></tr>
+            <tr><td><b>Queue</b></td><td>Очередь (FIFO)</td><td>✅ Да</td><td>Сохраняется</td><td><code>LinkedList</code>, <code>PriorityQueue</code></td></tr>
+            <tr><td><b>Map</b></td><td>Ключ → значение</td><td>Ключи — нет</td><td>Зависит</td><td><code>HashMap</code>, <code>TreeMap</code></td></tr>
+        </table>
+
+        <!-- ArrayList vs LinkedList -->
+        <h2>ArrayList vs LinkedList</h2>
+        <table>
+            <tr><th>Характеристика</th><th>ArrayList</th><th>LinkedList</th></tr>
+            <tr><td>Внутри</td><td>Динамический массив</td><td>Двусвязный список (узлы)</td></tr>
+            <tr><td>get(i)</td><td>⚡ O(1)</td><td>🐢 O(n)</td></tr>
+            <tr><td>Вставка в конец</td><td>⚡ O(1) амортизировано</td><td>⚡ O(1)</td></tr>
+            <tr><td>Вставка в середину</td><td>🐢 O(n) — сдвиг</td><td>⚡ O(1) если знаем узел</td></tr>
+            <tr><td>Память</td><td>Только данные</td><td>Данные + 2 ссылки (prev/next)</td></tr>
+            <tr><td>Имплементирует</td><td>List</td><td>List + Queue (Deque)</td></tr>
+        </table>
+
+        <div class="answer-block">
+            <code>ArrayList</code> — динамический массив, быстрый доступ O(1), медленная вставка в середину O(n). <code>LinkedList</code> — двусвязный список, медленный доступ O(n), быстрая вставка в середину O(1). В большинстве случаев ArrayList.
+        </div>
+
+        <!-- Методы List -->
+        <h2>Методы List (ArrayList / LinkedList)</h2>
+        <table>
+            <tr><th>Сигнатура</th><th>Описание</th><th>Пример</th></tr>
+            <tr><td><code>void add(E e)</code></td><td>Добавить в конец</td><td><code>list.add("A");</code></td></tr>
+            <tr><td><code>void add(int i, E e)</code></td><td>Вставить по индексу</td><td><code>list.add(1, "B");</code></td></tr>
+            <tr><td><code>E get(int i)</code></td><td>Получить по индексу</td><td><code>String s = list.get(0);</code></td></tr>
+            <tr><td><code>E set(int i, E e)</code></td><td>Заменить по индексу</td><td><code>list.set(0, "X");</code></td></tr>
+            <tr><td><code>E remove(int i)</code></td><td>Удалить по индексу</td><td><code>list.remove(0);</code></td></tr>
+            <tr><td><code>boolean remove(Object o)</code></td><td>Удалить по значению</td><td><code>list.remove("A");</code></td></tr>
+            <tr><td><code>int size()</code></td><td>Размер списка</td><td><code>int n = list.size();</code></td></tr>
+            <tr><td><code>boolean isEmpty()</code></td><td>Пустой ли</td><td><code>if (list.isEmpty())</code></td></tr>
+            <tr><td><code>void clear()</code></td><td>Очистить</td><td><code>list.clear();</code></td></tr>
+            <tr><td><code>boolean contains(Object o)</code></td><td>Содержит ли</td><td><code>if (list.contains("A"))</code></td></tr>
+            <tr><td><code>int indexOf(Object o)</code></td><td>Индекс первого вхождения</td><td><code>int i = list.indexOf("A");</code></td></tr>
+            <tr><td><code>List&lt;E&gt; subList(i, j)</code></td><td>Подсписок с i до j</td><td><code>list.subList(0, 3);</code></td></tr>
+            <tr><td><code>Object[] toArray()</code></td><td>В массив Object</td><td><code>Object[] arr = list.toArray();</code></td></tr>
+        </table>
+
+        <!-- Методы Set -->
+        <h2>Методы Set (HashSet / TreeSet)</h2>
+        <table>
+            <tr><th>Сигнатура</th><th>Описание</th><th>Пример</th></tr>
+            <tr><td><code>boolean add(E e)</code></td><td>Добавить (false если уже есть)</td><td><code>set.add("A");</code></td></tr>
+            <tr><td><code>boolean remove(Object o)</code></td><td>Удалить</td><td><code>set.remove("A");</code></td></tr>
+            <tr><td><code>boolean contains(Object o)</code></td><td>Содержит ли</td><td><code>if (set.contains("A"))</code></td></tr>
+            <tr><td><code>int size()</code></td><td>Размер</td><td><code>int n = set.size();</code></td></tr>
+            <tr><td><code>boolean isEmpty()</code></td><td>Пустой ли</td><td><code>if (set.isEmpty())</code></td></tr>
+            <tr><td><code>void clear()</code></td><td>Очистить</td><td><code>set.clear();</code></td></tr>
+        </table>
+
+        <!-- Методы Map -->
+        <h2>Методы Map (HashMap / TreeMap)</h2>
+        <table>
+            <tr><th>Сигнатура</th><th>Описание</th><th>Пример</th></tr>
+            <tr><td><code>V put(K k, V v)</code></td><td>Добавить/обновить (возвращает старое значение)</td><td><code>map.put("key", 123);</code></td></tr>
+            <tr><td><code>V get(Object k)</code></td><td>Получить по ключу (null если нет)</td><td><code>int v = map.get("key");</code></td></tr>
+            <tr><td><code>V getOrDefault(K k, V def)</code></td><td>Получить или значение по умолчанию</td><td><code>map.getOrDefault("k", 0);</code></td></tr>
+            <tr><td><code>V remove(Object k)</code></td><td>Удалить по ключу</td><td><code>map.remove("key");</code></td></tr>
+            <tr><td><code>boolean containsKey(Object k)</code></td><td>Есть ли ключ</td><td><code>if (map.containsKey("k"))</code></td></tr>
+            <tr><td><code>boolean containsValue(Object v)</code></td><td>Есть ли значение</td><td><code>if (map.containsValue(123))</code></td></tr>
+            <tr><td><code>int size()</code></td><td>Размер</td><td><code>int n = map.size();</code></td></tr>
+            <tr><td><code>boolean isEmpty()</code></td><td>Пустая ли</td><td><code>if (map.isEmpty())</code></td></tr>
+            <tr><td><code>void clear()</code></td><td>Очистить</td><td><code>map.clear();</code></td></tr>
+            <tr><td><code>Set&lt;K&gt; keySet()</code></td><td>Все ключи</td><td><code>for (K k : map.keySet())</code></td></tr>
+            <tr><td><code>Collection&lt;V&gt; values()</code></td><td>Все значения</td><td><code>for (V v : map.values())</code></td></tr>
+            <tr><td><code>Set&lt;Entry&gt; entrySet()</code></td><td>Все пары ключ-значение</td><td><code>for (Entry e : map.entrySet())</code></td></tr>
+            <tr><td><code>V putIfAbsent(K k, V v)</code></td><td>Добавить только если нет ключа</td><td><code>map.putIfAbsent("k", 1);</code></td></tr>
+            <tr><td><code>void forEach(BiConsumer)</code></td><td>Действие для каждой пары</td><td><code>map.forEach((k,v) -> ...);</code></td></tr>
+        </table>
+
+        <!-- Итерация -->
+        <h2>Способы обхода коллекций</h2>
+        <pre>// List — 4 способа
+List&lt;String&gt; list = List.of("A", "B", "C");
+
+// 1. for-each (самый читаемый)
+for (String s : list) { System.out.println(s); }
+
+// 2. По индексу
+for (int i = 0; i &lt; list.size(); i++) { System.out.println(list.get(i)); }
+
+// 3. Iterator
+Iterator&lt;String&gt; it = list.iterator();
+while (it.hasNext()) { System.out.println(it.next()); }
+
+// 4. Stream / forEach
+list.forEach(System.out::println);
+
+// Map — 3 способа
+Map&lt;String, Integer&gt; map = Map.of("A", 1, "B", 2);
+
+// 1. По ключам
+for (String key : map.keySet()) { System.out.println(key + "=" + map.get(key)); }
+
+// 2. По entry (самый эффективный)
+for (Map.Entry&lt;String, Integer&gt; entry : map.entrySet()) {
+    System.out.println(entry.getKey() + "=" + entry.getValue());
+}
+
+// 3. forEach
+map.forEach((k, v) -> System.out.println(k + "=" + v));</pre>
+
+        <!-- ArrayList расширение -->
+        <h2>ArrayList — как расширяется</h2>
+        <p>Когда size == capacity, новый массив в <b>1.5 раза</b> больше, элементы копируются через <code>System.arraycopy()</code>.</p>
+        <pre>// capacity = 10, все заняты → add()
+// 1. Новый массив на 15
+// 2. Копируем 10 элементов
+// 3. Добавляем новый → size = 11, capacity = 15
+// Совет: new ArrayList<>(1000) — задать capacity сразу</pre>
+
+        <!-- HashMap -->
+        <h2>HashMap — как устроен внутри</h2>
+        <p>Массив корзин (buckets). Каждая корзина — связный список → красно-чёрное дерево при 8+.</p>
+
+        <h3>put(K, V):</h3>
+        <ol>
+            <li><code>hashCode()</code> ключа → индекс корзины</li>
+            <li>Корзина пуста → кладём пару</li>
+            <li>Корзина занята → идём по списку, сравниваем через <code>equals()</code></li>
+            <li>Ключ совпал → перезапись, не совпал → добавляем в конец</li>
+            <li>Список > 8 → красно-чёрное дерево</li>
+        </ol>
+
+        <p><b>Сложность:</b> средняя O(1), худшая O(n) при плохом hashCode (всё в одной корзине).</p>
+
+        <div class="answer-block">
+            <code>HashMap</code> — массив корзин. <code>put()</code>: хэш ключа → корзина → сравнение <code>equals()</code>. Коллизия: идём по связному списку. Сложность O(1) в среднем. Ключи должны быть immutable.
+        </div>
+
+        <!-- HashMap vs TreeMap vs LinkedHashMap -->
+        <h2>HashMap vs TreeMap vs LinkedHashMap</h2>
+        <table>
+            <tr><th></th><th>HashMap</th><th>TreeMap</th><th>LinkedHashMap</th></tr>
+            <tr><td>Порядок</td><td>❌ Нет</td><td>✅ По ключам</td><td>✅ По вставке</td></tr>
+            <tr><td>Скорость</td><td>O(1)</td><td>O(log n)</td><td>O(1)</td></tr>
+            <tr><td>Внутри</td><td>Массив + списки</td><td>Красно-чёрное дерево</td><td>HashMap + двусвязный список</td></tr>
+            <tr><td>null-ключи</td><td>✅ Один</td><td>❌</td><td>✅ Один</td></tr>
+        </table>
+
+        <!-- HashSet -->
+        <h2>HashSet — внутри HashMap!</h2>
+        <pre>// Упрощённо:
+public class HashSet&lt;E&gt; {
+    private HashMap&lt;E, Object&gt; map;
+    private static final Object PRESENT = new Object();
+
+    public boolean add(E e) {
+        return map.put(e, PRESENT) == null;
+    }
+}</pre>
+
+        <!-- Нюансы -->
+        <h2>Важные нюансы</h2>
+        <ul>
+            <li><b>Ключи HashMap — immutable</b> (иначе изменится hashCode и объект потеряется)</li>
+            <li><b>ConcurrentModificationException</b> — если менять коллекцию во время итерации (кроме iterator.remove())</li>
+            <li><b>Collections.unmodifiableList()</b> — неизменяемая обёртка</li>
+            <li><b>List.of() / Set.of()</b> (Java 9+) — неизменяемые коллекции</li>
+        </ul>
+
+                <!-- Collections utility -->
+        <h2>Утилитный класс Collections — синтаксис и примеры</h2>
+        <p><code>java.util.Collections</code> — набор статических методов для работы с коллекциями.</p>
+
+        <h3>Сортировка</h3>
+        <pre>List&lt;String&gt; list = new ArrayList&lt;&gt;(List.of("C", "A", "B"));
+
+// Natural order (естественный порядок — Comparable)
+Collections.sort(list);                     // [A, B, C]
+
+// С компаратором (по длине строки)
+Collections.sort(list, (a, b) -> Integer.compare(a.length(), b.length()));
+
+// Сортировка в обратном порядке
+Collections.sort(list, Collections.reverseOrder());
+
+// Сортировка с компаратором в обратном порядке
+Collections.sort(list, Comparator.comparing(String::length).reversed());</pre>
+
+        <h3>Перемешивание и переворот</h3>
+        <pre>Collections.shuffle(list);               // случайное перемешивание
+Collections.shuffle(list, new Random(42)); // с заданным Random (воспроизводимо)
+Collections.reverse(list);                 // перевернуть порядок [C, B, A]</pre>
+
+        <h3>Поиск</h3>
+        <pre>// Бинарный поиск — список ДОЛЖЕН быть отсортирован!
+Collections.sort(list);                    // сначала сортируем
+int index = Collections.binarySearch(list, "B"); // 1
+
+// Если элемент не найден — возвращает отрицательное значение:
+// -(insertion point) - 1
+int notFound = Collections.binarySearch(list, "Z"); // -4 (должен быть на 3-й позиции)</pre>
+
+        <h3>Min / Max</h3>
+        <pre>String min = Collections.min(list);                  // natural order
+String max = Collections.max(list);                  // natural order
+String minByLen = Collections.min(list, Comparator.comparing(String::length));
+String maxByLen = Collections.max(list, Comparator.comparing(String::length));</pre>
+
+        <h3>Частота и замена</h3>
+        <pre>List&lt;String&gt; names = List.of("A", "B", "A", "C", "A");
+
+// Сколько раз встречается
+int freq = Collections.frequency(names, "A"); // 3
+
+// Заменить все вхождения
+List&lt;String&gt; mutable = new ArrayList&lt;&gt;(names);
+Collections.replaceAll(mutable, "A", "X");     // [X, B, X, C, X]</pre>
+
+        <h3>Заполнение и копирование</h3>
+        <pre>// Заполнить список одним значением
+List&lt;String&gt; list = new ArrayList&lt;&gt;(Arrays.asList("", "", ""));
+Collections.fill(list, "default");            // [default, default, default]
+
+// Копирование (назначение должно быть НЕ МЕНЬШЕ источника)
+List&lt;String&gt; src = List.of("X", "Y", "Z");
+List&lt;String&gt; dst = new ArrayList&lt;&gt;(Arrays.asList("", "", "", ""));
+Collections.copy(dst, src);                   // dst = [X, Y, Z, ""] (последний не перезаписан)</pre>
+
+        <h3>Неизменяемые обёртки (Unmodifiable)</h3>
+        <pre>List&lt;String&gt; original = new ArrayList&lt;&gt;(List.of("A", "B", "C"));
+
+// Создать неизменяемое представление (view — следит за оригиналом!)
+List&lt;String&gt; unmodifiable = Collections.unmodifiableList(original);
+
+// unmodifiable.add("D"); // ❌ UnsupportedOperationException!
+// original.add("D");     // ✅ Меняем оригинал → unmodifiable тоже изменился!
+
+// Полностью независимая копия
+List&lt;String&gt; copy = new ArrayList&lt;&gt;(original); // независимый список
+
+// Java 9+ — по-настоящему неизменяемые коллекции
+List&lt;String&gt; immutable = List.of("A", "B", "C"); // вообще нельзя менять
+Set&lt;String&gt; immutableSet = Set.of("A", "B", "C");
+Map&lt;String, Integer&gt; immutableMap = Map.of("A", 1, "B", 2);</pre>
+
+        <h3>Синхронизированные обёртки (Synchronized)</h3>
+        <pre>// Обычный список — не потокобезопасный
+List&lt;String&gt; list = new ArrayList&lt;&gt;();
+
+// Синхронизированная обёртка
+List&lt;String&gt; syncList = Collections.synchronizedList(list);
+
+// При итерации нужно явно синхронизировать!
+synchronized (syncList) {
+    for (String s : syncList) {
+        System.out.println(s);
+    }
+}
+
+// Лучше использовать ConcurrentHashMap и CopyOnWriteArrayList
+// вместо синхронизированных обёрток</pre>
+
+        <h3>Пустые коллекции</h3>
+        <pre>// Вместо return null — возвращай пустую коллекцию
+List&lt;String&gt; emptyList = Collections.emptyList(); // неизменяемый
+Set&lt;String&gt; emptySet = Collections.emptySet();
+Map&lt;String, Integer&gt; emptyMap = Collections.emptyMap();</pre>
+
+        <h3>Singleton (коллекция из одного элемента)</h3>
+        <pre>Set&lt;String&gt; single = Collections.singleton("единственный");
+List&lt;String&gt; singleList = Collections.singletonList("один");
+Map&lt;String, Integer&gt; singleMap = Collections.singletonMap("key", 42);
+// Все неизменяемые!</pre>
+
+        <h3>Полный список методов Collections:</h3>
+        <table>
+            <tr><th>Категория</th><th>Методы</th></tr>
+            <tr>
+                <td>Сортировка</td>
+                <td><code>sort(list)</code>, <code>sort(list, comp)</code>, <code>reverse(list)</code>, <code>shuffle(list)</code></td>
+            </tr>
+            <tr>
+                <td>Поиск</td>
+                <td><code>binarySearch(list, key)</code>, <code>min(coll)</code>, <code>max(coll)</code>, <code>frequency(coll, obj)</code></td>
+            </tr>
+            <tr>
+                <td>Изменение</td>
+                <td><code>fill(list, obj)</code>, <code>copy(dst, src)</code>, <code>replaceAll(list, old, new)</code>, <code>swap(list, i, j)</code></td>
+            </tr>
+            <tr>
+                <td>Обёртки</td>
+                <td><code>unmodifiable...(coll)</code>, <code>synchronized...(coll)</code>, <code>checked...(coll, type)</code></td>
+            </tr>
+            <tr>
+                <td>Пустые/single</td>
+                <td><code>emptyList()</code>, <code>emptySet()</code>, <code>singletonList(obj)</code>, <code>singleton(obj)</code></td>
+            </tr>
+            <tr>
+                <td>Другое</td>
+                <td><code>nCopies(n, obj)</code>, <code>disjoint(c1, c2)</code>, <code>rotate(list, distance)</code></td>
+            </tr>
+        </table>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Чем ArrayList отличается от LinkedList?</li>
+            <li>Как расширяется ArrayList при заполнении?</li>
+            <li>Расскажи устройство HashMap (put, get, коллизии).</li>
+            <li>Чем HashMap отличается от TreeMap и LinkedHashMap?</li>
+            <li>Почему ключи HashMap должны быть immutable?</li>
+            <li>Как обойти Map всеми способами?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Коллекции</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

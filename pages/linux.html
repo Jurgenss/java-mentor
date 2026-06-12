@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux для разработчика | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🐧 Linux для Java-разработчика</h1>
+
+        <div class="note">99% серверов работают на Linux. На собесе спросят базовые команды: навигация, права, процессы, логи. Глубокого администрирования не ждут, но "как посмотреть логи" — обязательный вопрос.</div>
+
+        <!-- Зачем -->
+        <h2>Зачем Java-разработчику Linux</h2>
+        <ul>
+            <li>🚀 <b>Серверы</b> — твой код запускается на Linux-серверах</li>
+            <li>📋 <b>Логи</b> — ошибки в проде смотрят через терминал</li>
+            <li>🐳 <b>Docker</b> — контейнеры основаны на Linux</li>
+            <li>🔧 <b>Деплой</b> — CI/CD пайплайны выполняют bash-скрипты</li>
+            <li>📊 <b>Мониторинг</b> — нагрузка, память, диски</li>
+        </ul>
+
+        <div class="answer-block">
+            Linux — основная ОС для серверов. Девопс-задачи (посмотреть логи, перезапустить сервис, проверить память) выполняются через терминал. Для джуна достаточно знать базовые команды.
+        </div>
+
+        <!-- Навигация -->
+        <h2>Навигация по файловой системе</h2>
+        <table>
+            <tr><th>Команда</th><th>Что делает</th><th>Пример</th></tr>
+            <tr><td><code>pwd</code></td><td>Показать текущую директорию</td><td><code>/home/user/projects</code></td></tr>
+            <tr><td><code>ls</code></td><td>Список файлов</td><td><code>ls -la</code> (подробно + скрытые)</td></tr>
+            <tr><td><code>cd &lt;dir&gt;</code></td><td>Перейти в директорию</td><td><code>cd /var/log</code></td></tr>
+            <tr><td><code>cd ..</code></td><td>На уровень выше</td><td></td></tr>
+            <tr><td><code>cd ~</code></td><td>В домашнюю директорию</td><td></td></tr>
+            <tr><td><code>mkdir &lt;dir&gt;</code></td><td>Создать директорию</td><td><code>mkdir myapp</code></td></tr>
+            <tr><td><code>rm &lt;file&gt;</code></td><td>Удалить файл</td><td><code>rm old.log</code></td></tr>
+            <tr><td><code>rm -rf &lt;dir&gt;</code></td><td>Удалить директорию рекурсивно</td><td>⚠ Осторожно!</td></tr>
+            <tr><td><code>cp src dst</code></td><td>Копировать</td><td><code>cp app.jar backup/</code></td></tr>
+            <tr><td><code>mv src dst</code></td><td>Переместить / переименовать</td><td><code>mv old.jar new.jar</code></td></tr>
+        </table>
+
+        <!-- Просмотр файлов -->
+        <h2>Просмотр и поиск в файлах</h2>
+        <table>
+            <tr><th>Команда</th><th>Что делает</th><th>Пример</th></tr>
+            <tr><td><code>cat &lt;file&gt;</code></td><td>Вывести весь файл</td><td><code>cat app.log</code></td></tr>
+            <tr><td><code>less &lt;file&gt;</code></td><td>Просмотр с прокруткой (q — выход)</td><td><code>less app.log</code></td></tr>
+            <tr><td><code>tail -f &lt;file&gt;</code></td><td>Последние строки + следить (Ctrl+C — выход)</td><td><code>tail -f app.log</code></td></tr>
+            <tr><td><code>tail -100 &lt;file&gt;</code></td><td>Последние 100 строк</td><td><code>tail -100 app.log</code></td></tr>
+            <tr><td><code>head -20 &lt;file&gt;</code></td><td>Первые 20 строк</td><td></td></tr>
+            <tr><td><code>grep &lt;pattern&gt; &lt;file&gt;</code></td><td>Поиск по файлу</td><td><code>grep "ERROR" app.log</code></td></tr>
+            <tr><td><code>grep -r &lt;pattern&gt; &lt;dir&gt;</code></td><td>Рекурсивный поиск по директории</td><td><code>grep -r "NullPointer" /var/log/</code></td></tr>
+            <tr><td><code>find &lt;dir&gt; -name &lt;pattern&gt;</code></td><td>Поиск файлов по имени</td><td><code>find . -name "*.jar"</code></td></tr>
+        </table>
+
+        <!-- Комбинация команд -->
+        <h2>Пайпы (|) и перенаправление</h2>
+        <pre># Пайп — передать вывод одной команды на вход другой
+grep "ERROR" app.log | tail -10       # последние 10 ошибок
+
+# Перенаправление вывода в файл (> — перезаписать, >> — добавить)
+java -jar app.jar > app.log 2>&1 &    # запустить и писать логи в файл
+
+# Сортировка и уникальные значения
+grep "ERROR" app.log | sort | uniq -c | sort -rn  # топ ошибок по частоте</pre>
+
+        <!-- Процессы -->
+        <h2>Процессы и системные ресурсы</h2>
+        <table>
+            <tr><th>Команда</th><th>Что делает</th></tr>
+            <tr><td><code>ps aux</code></td><td>Все запущенные процессы</td></tr>
+            <tr><td><code>ps aux | grep java</code></td><td>Найти Java-процессы</td></tr>
+            <tr><td><code>kill &lt;PID&gt;</code></td><td>Завершить процесс</td></tr>
+            <tr><td><code>kill -9 &lt;PID&gt;</code></td><td>Жёстко завершить</td></tr>
+            <tr><td><code>top</code></td><td>Интерактивный мониторинг (q — выход)</td></tr>
+            <tr><td><code>htop</code></td><td>Более удобный top (если установлен)</td></tr>
+            <tr><td><code>free -h</code></td><td>Память (human-readable)</td></tr>
+            <tr><td><code>df -h</code></td><td>Свободное место на дисках</td></tr>
+        </table>
+
+        <!-- Права -->
+        <h2>Права доступа (chmod)</h2>
+        <pre># Просмотр прав
+ls -la
+# -rwxr-xr--  1 user group  4096 Jun 11 12:00 app.jar
+#  ↑  ↑  ↑
+#  |  |  └── права для остальных (r-- = только чтение)
+#  |  └───── права для группы (r-x = чтение + выполнение)
+#  └──────── права владельца (rwx = чтение + запись + выполнение)
+
+# Изменить права
+chmod +x script.sh        # сделать исполняемым
+chmod 755 app.jar         # rwxr-xr-x (владелец — всё, остальные — чтение+запуск)
+chmod 644 config.prop     # rw-r--r--</pre>
+
+        <!-- SSH -->
+        <h2>SSH — подключение к серверу</h2>
+        <pre>ssh user@server.com              # подключиться
+ssh -p 2222 user@server.com     # нестандартный порт
+ssh -i key.pem user@server.com  # с ключом
+
+# Копирование файлов
+scp app.jar user@server.com:/opt/myapp/          # на сервер
+scp user@server.com:/var/log/app.log ./          # с сервера</pre>
+
+        <!-- Полезные комбинации -->
+        <h2>Типичные задачи джуна в Linux</h2>
+        <pre># Посмотреть логи приложения
+tail -f /var/log/myapp/application.log
+
+# Найти ошибку
+grep -A 5 "Exception" application.log | less
+
+# Перезапустить сервис (systemd)
+sudo systemctl restart myapp
+
+# Проверить, запущен ли сервис
+sudo systemctl status myapp
+
+# Проверить, слушает ли порт 8080
+netstat -tlnp | grep 8080
+# или
+ss -tlnp | grep 8080
+
+# Посмотреть нагрузку
+top -p $(pgrep -f myapp)</pre>
+
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Как посмотреть последние 100 строк лога в реальном времени?</li>
+            <li>Как найти все строки с "ERROR" в логах и посчитать их количество?</li>
+            <li>Как завершить зависший Java-процесс?</li>
+            <li>Что делает команда chmod 755?</li>
+            <li>Как скопировать файл на удалённый сервер?</li>
+        </ol>
+
+    </main>
+    <footer class="footer"><p>📱 Java Mentor · Linux</p></footer>
+    <script src="../js/script.js"></script>
+</body>
+</html>

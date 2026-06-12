@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Security | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🔐 Spring Security</h1>
+
+        <div class="note">Spring Security — фреймворк для аутентификации и авторизации. На джуна спросят: что такое JWT, как защитить эндпоинты, базовая конфигурация.</div>
+
+        <!-- Основные понятия -->
+        <h2>Аутентификация vs Авторизация</h2>
+        <table>
+            <tr><th></th><th>Аутентификация</th><th>Авторизация</th></tr>
+            <tr><td>Вопрос</td><td><b>Кто ты?</b></td><td><b>Что тебе можно?</b></td></tr>
+            <tr><td>Пример</td><td>Логин + пароль, JWT-токен</td><td>Роли: ADMIN может удалять, USER — нет</td></tr>
+            <tr><td>Аннотации</td><td>AuthenticationManager</td><td>@PreAuthorize, @RolesAllowed</td></tr>
+        </table>
+
+        <div class="answer-block">
+            <b>Аутентификация</b> — проверка "кто ты?" (логин/пароль, токен, OAuth2). <b>Авторизация</b> — проверка "что тебе можно?" (роли, права доступа к URL/методам). В Spring Security: AuthenticationManager для аутентификации, @PreAuthorize и SecurityFilterChain для авторизации.
+        </div>
+
+        <!-- Базовая конфигурация -->
+        <h2>Базовая конфигурация (Spring Boot 3.x)</h2>
+        <pre>@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable()) // для REST API — отключаем CSRF
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/public/**").permitAll()     // всем
+                .requestMatchers("/api/admin/**").hasRole("ADMIN") // только админам
+                .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+                .anyRequest().authenticated()                      // остальное — после логина
+            )
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // без сессий, для JWT
+            )
+            .httpBasic(Customizer.withDefaults()); // или formLogin или JWT-фильтр
+
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(); // хеширование паролей
+    }
+}</pre>
+
+        <!-- JWT -->
+        <h2>JWT (JSON Web Token) — основа современных API</h2>
+        <p><b>JWT</b> — компактный токен, который передаётся в заголовке Authorization. Сервер не хранит сессии (stateless).</p>
+
+        <h3>Структура JWT:</h3>
+        <pre>Header.Payload.Signature
+
+Header:   {"alg": "HS256", "typ": "JWT"}
+Payload:  {"sub": "123", "name": "Иван", "role": "USER", "exp": 1718000000}
+Signature: HMAC-SHA256(base64(header) + "." + base64(payload), secret_key)</pre>
+
+        <h3>Как работает JWT:</h3>
+        <pre>1. Клиент: POST /api/auth/login (логин + пароль)
+2. Сервер: проверяет, создаёт JWT, возвращает в ответе
+3. Клиент: сохраняет JWT (localStorage/cookie)
+4. Клиент: каждый следующий запрос — добавляет заголовок:
+   Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+
+5. Сервер: проверяет подпись → извлекает пользователя → пропускает запрос</pre>
+
+        <h3>Генерация JWT (упрощённо):</h3>
+        <pre>// Зависимость: io.jsonwebtoken:jjwt-api:0.12.5
+@Service
+public class JwtService {
+
+    @Value("${jwt.secret}")
+    private String secret; // минимум 256 бит
+
+    public String generateToken(UserDetails user) {
+        return Jwts.builder()
+            .subject(user.getUsername())
+            .claim("role", user.getAuthorities().toString())
+            .issuedAt(new Date())
+            .expiration(new Date(System.currentTimeMillis() + 86400000)) // 24 часа
+            .signWith(Keys.hmacShaKeyFor(secret.getBytes()))
+            .compact();
+    }
+
+    public String extractUsername(String token) {
+        return Jwts.parser()
+            .verifyWith(Keys.hmacShaKeyFor(secret.getBytes()))
+            .build()
+            .parseSignedClaims(token)
+            .getPayload()
+            .getSubject();
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            extractUsername(token);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
+    }
+}</pre>
+
+        <h3>JWT-фильтр:</h3>
+        <pre>@Component
+public class JwtFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                     HttpServletResponse response,
+                                     FilterChain chain)
+            throws ServletException, IOException {
+        String header = request.getHeader("Authorization");
+
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
+            if (jwtService.isTokenValid(token)) {
+                String username = jwtService.extractUsername(token);
+                // Устанавливаем пользователя в SecurityContext
+                SecurityContextHolder.getContext().setAuthentication(
+                    new UsernamePasswordAuthenticationToken(username, null, List.of())
+                );
+            }
+        }
+        chain.doFilter(request, response);
+    }
+}</pre>
+
+        <!-- Аннотации -->
+        <h2>Аннотации для авторизации</h2>
+        <table>
+            <tr><th>Аннотация</th><th>Пример</th></tr>
+            <tr>
+                <td><code>@PreAuthorize</code></td>
+                <td><code>@PreAuthorize("hasRole('ADMIN')")</code></td>
+            </tr>
+            <tr>
+                <td><code>@PostAuthorize</code></td>
+                <td><code>@PostAuthorize("returnObject.userId == authentication.principal.id")</code></td>
+            </tr>
+            <tr>
+                <td><code>@Secured</code></td>
+                <td><code>@Secured("ROLE_ADMIN")</code></td>
+            </tr>
+            <tr>
+                <td><code>@RolesAllowed</code></td>
+                <td><code>@RolesAllowed("USER")</code></td>
+            </tr>
+        </table>
+
+        <pre>@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')") // только админ
+    public List&lt;User&gt; getAll() { ... }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("#id == authentication.principal.id") // только свои данные
+    public User getById(@PathVariable Long id) { ... }
+}</pre>
+
+        <!-- BCrypt -->
+        <h2>Хеширование паролей (BCrypt)</h2>
+        <pre>// НИКОГДА не храните пароли в открытом виде!
+
+@Bean
+public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+}
+
+// Регистрация
+public User register(String username, String rawPassword) {
+    String hashedPassword = passwordEncoder.encode(rawPassword);
+    // храним в БД: $2a$10$N9qo8uLOickgx2ZMRZoMye...
+    return userRepo.save(new User(username, hashedPassword));
+}
+
+// Проверка пароля
+public boolean checkPassword(String rawPassword, String hashedPassword) {
+    return passwordEncoder.matches(rawPassword, hashedPassword);
+}</pre>
+
+        <!-- Полный поток -->
+        <h2>Полный поток: регистрация + логин + доступ</h2>
+        <pre>// 1. Регистрация
+POST /api/auth/register
+{
+    "username": "ivan",
+    "password": "secret123"
+}
+→ 201 Created
+
+// 2. Логин
+POST /api/auth/login
+{
+    "username": "ivan",
+    "password": "secret123"
+}
+→ 200 OK + { "token": "eyJhbGciOiJIUzI1NiIs..." }
+
+// 3. Запрос с токеном
+GET /api/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+→ 200 OK (если роль ADMIN) или 403 Forbidden (если USER)</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>В чём разница между аутентификацией и авторизацией?</li>
+            <li>Что такое JWT и из чего он состоит?</li>
+            <li>Зачем нужен BCrypt для паролей?</li>
+            <li>Как защитить эндпоинт, чтобы только админ мог его вызывать?</li>
+            <li>Почему для REST API с JWT отключают CSRF и сессии?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Spring Security</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Исключения | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>⚠ Исключения в Java</h1>
+
+        <div class="note">Исключения — это способ обработки ошибок. На собесе спросят иерархию, checked/unchecked и try-with-resources.</div>
+
+        <!-- Иерархия -->
+        <h2>Иерархия исключений</h2>
+        <pre>Throwable
+ ├── Error (критические ошибки JVM — НЕ обрабатываем)
+ │    ├── StackOverflowError
+ │    ├── OutOfMemoryError
+ │    └── VirtualMachineError
+ │
+ └── Exception (можно и нужно обрабатывать)
+      ├── RuntimeException (unchecked — необязательно)
+      │    ├── NullPointerException
+      │    ├── ArrayIndexOutOfBoundsException
+      │    ├── ArithmeticException (/ by zero)
+      │    ├── IllegalArgumentException
+      │    ├── ClassCastException
+      │    └── NumberFormatException
+      │
+      └── IOException (checked — обязательно!)
+           ├── FileNotFoundException
+           └── EOFException</pre>
+
+        <div class="answer-block">
+            <code>Throwable</code> — корень иерархии. <code>Error</code> — критические ошибки JVM, их не обрабатываем. <code>Exception</code> — делятся на checked (компилятор требует обработки) и unchecked / <code>RuntimeException</code> (опционально).
+        </div>
+
+        <!-- Checked vs Unchecked -->
+        <h2>Checked vs Unchecked</h2>
+        <table>
+            <tr><th></th><th>Checked</th><th>Unchecked (RuntimeException)</th></tr>
+            <tr><td>Проверка</td><td>✅ Компилятор заставляет обработать</td><td>❌ Необязательно</td></tr>
+            <tr><td>Наследование</td><td><code>extends Exception</code></td><td><code>extends RuntimeException</code></td></tr>
+            <tr><td>Примеры</td><td><code>IOException</code>, <code>SQLException</code>, <code>FileNotFoundException</code></td><td><code>NullPointerException</code>, <code>ArithmeticException</code>, <code>IllegalArgumentException</code></td></tr>
+            <tr><td>Природа</td><td>Внешние факторы (файл не найден, сеть упала)</td><td>Ошибки программиста (забыл проверить на null)</td></tr>
+            <tr><td>Обработка</td><td><code>try-catch</code> или <code>throws</code> в сигнатуре</td><td>По желанию</td></tr>
+        </table>
+
+        <div class="answer-block">
+            Checked-исключения — компилятор заставляет их обработать (<code>try-catch</code> или <code>throws</code>). Это внешние ошибки: файл не найден, сеть недоступна. Unchecked (<code>RuntimeException</code>) — ошибки программиста: <code>NullPointerException</code>, выход за границы массива. Их обрабатывать необязательно.
+        </div>
+
+        <!-- throw vs throws -->
+        <h2>throw vs throws</h2>
+        <table>
+            <tr><th></th><th><code>throw</code></th><th><code>throws</code></th></tr>
+            <tr><td>Что делает</td><td><b>Бросает</b> исключение</td><td><b>Предупреждает</b> об исключении</td></tr>
+            <tr><td>Где пишется</td><td>Внутри метода</td><td>В сигнатуре метода</td></tr>
+            <tr><td>Работает с</td><td>Объектом исключения</td><td>Классом исключения</td></tr>
+            <tr><td>Количество</td><td>Одно за раз</td><td>Несколько через запятую</td></tr>
+        </table>
+
+        <pre>// throw — бросаем объект исключения
+public void setAge(int age) {
+    if (age < 0) {
+        throw new IllegalArgumentException("Возраст не может быть отрицательным!");
+    }
+    this.age = age;
+}
+
+// throws — предупреждаем в сигнатуре
+public void readFile(String path) throws IOException {
+    FileReader reader = new FileReader(path); // может бросить IOException
+    // ...
+}</pre>
+
+        <p><b>Запоминалка:</b> <code>throw</code> — глагол (бросаю), <code>throws</code> — предупреждение на двери (осторожно, исключение!).</p>
+
+        <!-- try-catch-finally -->
+        <h2>try-catch-finally</h2>
+        <pre>try {
+    // код, который может бросить исключение
+    int result = 10 / 0;
+} catch (ArithmeticException e) {
+    // обработка конкретного исключения
+    System.out.println("Деление на ноль: " + e.getMessage());
+} catch (Exception e) {
+    // обработка любого другого исключения (порядок важен — от частного к общему!)
+    System.out.println("Что-то пошло не так: " + e.getMessage());
+} finally {
+    // выполняется ВСЕГДА — даже если был return или исключение
+    System.out.println("Блок finally");
+}</pre>
+
+        <h3>Правила:</h3>
+        <ul>
+            <li><code>catch</code> — порядок от частного к общему (иначе ошибка компиляции)</li>
+            <li><code>finally</code> — выполняется всегда, даже если был <code>return</code></li>
+            <li>Можно <code>try-finally</code> без <code>catch</code></li>
+            <li>Можно несколько <code>catch</code> на один <code>try</code></li>
+            <li>С Java 7 можно ловить несколько в одном catch: <code>catch (IOException | SQLException e)</code></li>
+        </ul>
+
+        <!-- finally и return -->
+        <h2>finally и return — ловушка!</h2>
+        <pre>// finally перебивает return!
+static int test() {
+    try {
+        return 1;
+    } finally {
+        return 2; // ПЕРЕБИВАЕТ return 1!
+    }
+}
+System.out.println(test()); // 2
+
+// Никогда не пиши return в finally!</pre>
+
+        <!-- try-with-resources -->
+        <h2>try-with-resources (Java 7+)</h2>
+        <p>Автоматическое закрытие ресурсов, реализующих <code>AutoCloseable</code>.</p>
+
+        <pre>// Было (Java 6):
+BufferedReader reader = null;
+try {
+    reader = new BufferedReader(new FileReader("file.txt"));
+    String line = reader.readLine();
+} catch (IOException e) {
+    e.printStackTrace();
+} finally {
+    if (reader != null) {
+        try {
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+// Стало (Java 7+):
+try (BufferedReader reader = new BufferedReader(new FileReader("file.txt"))) {
+    String line = reader.readLine();
+} catch (IOException e) {
+    e.printStackTrace();
+}
+// reader.close() вызовется автоматически!</pre>
+
+        <h3>Несколько ресурсов:</h3>
+        <pre>try (Connection conn = DriverManager.getConnection(url);
+     PreparedStatement stmt = conn.prepareStatement(sql);
+     ResultSet rs = stmt.executeQuery()) {
+
+    while (rs.next()) { ... }
+
+} catch (SQLException e) {
+    e.printStackTrace();
+}
+// Закроются в обратном порядке: rs → stmt → conn</pre>
+
+        <!-- Создание своих исключений -->
+        <h2>Создание своих исключений</h2>
+        <pre>// Checked — extends Exception
+public class InsufficientFundsException extends Exception {
+    public InsufficientFundsException(String message) {
+        super(message);
+    }
+}
+
+// Unchecked — extends RuntimeException
+public class UserNotFoundException extends RuntimeException {
+    public UserNotFoundException(String message) {
+        super(message);
+    }
+
+    public UserNotFoundException(String message, Throwable cause) {
+        super(message, cause); // цепочка исключений
+    }
+}</pre>
+
+        <!-- Цепочка исключений -->
+        <h2>Цепочка исключений (chaining)</h2>
+        <pre>try {
+    // ...
+} catch (SQLException e) {
+    // Оборачиваем checked в unchecked с сохранением причины
+    throw new RuntimeException("Ошибка базы данных", e);
+}
+
+// Позже можно достать причину:
+catch (RuntimeException e) {
+    Throwable cause = e.getCause(); // оригинальный SQLException
+}</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Какая иерархия исключений в Java?</li>
+            <li>В чём разница между checked и unchecked исключениями?</li>
+            <li>В чём разница между throw и throws?</li>
+            <li>Что такое try-with-resources и как оно работает?</li>
+            <li>Что будет, если написать return в finally?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Исключения</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

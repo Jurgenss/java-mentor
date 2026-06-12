@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>static и final | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>📌 static и final в Java</h1>
+
+        <div class="note">Два ключевых слова, которые кардинально меняют поведение переменных, методов и классов. Спрашивают на каждом собесе.</div>
+
+        <!-- static -->
+        <h2>static — принадлежит классу, а не объекту</h2>
+        <p>Статическое поле или метод <b>едино для всех экземпляров</b>. Хранится в памяти один раз и загружается при первом обращении к классу.</p>
+
+        <h3>static-поле</h3>
+        <pre>public class User {
+    private String name;           // у каждого свой
+    public static int count = 0;   // общее для всех!
+
+    public User(String name) {
+        this.name = name;
+        count++; // увеличиваем общий счётчик
+    }
+}
+
+User u1 = new User("Иван");
+System.out.println(User.count); // 1
+User u2 = new User("Мария");
+System.out.println(User.count); // 2 — общее!</pre>
+
+        <h3>static-метод</h3>
+        <p>Вызывается без создания объекта. <b>Не имеет доступа к this</b> и нестатическим полям.</p>
+        <pre>public class MathUtils {
+    public static int sum(int a, int b) {
+        return a + b; // не нужен объект
+    }
+}
+
+int result = MathUtils.sum(5, 3); // вызов через класс, не через объект</pre>
+
+        <h3>static-блок</h3>
+        <p>Выполняется <b>один раз</b> при загрузке класса. Для сложной инициализации статических полей.</p>
+        <pre>public class Config {
+    public static String appName;
+
+    static {
+        // сложная логика загрузки конфига
+        appName = "MyApp v" + loadVersion();
+        System.out.println("Класс Config загружен!");
+    }
+
+    private static String loadVersion() {
+        return "2.0";
+    }
+}</pre>
+
+        <h3>static import (Java 5+)</h3>
+        <p>Импорт статических методов/констант, чтобы использовать без имени класса.</p>
+        <pre>import static java.lang.Math.PI;
+import static java.lang.Math.sqrt;
+
+double x = PI;          // вместо Math.PI
+double y = sqrt(16);    // вместо Math.sqrt(16)</pre>
+
+        <div class="answer-block">
+            <code>static</code> означает принадлежность классу, а не экземпляру. Статические поля — общие для всех объектов. Статические методы вызываются без создания объекта. Статические блоки выполняются один раз при загрузке класса.
+        </div>
+
+        <!-- final -->
+        <h2>final — "нельзя изменить"</h2>
+        <p>Значение зависит от того, <b>на что</b> повесили final.</p>
+
+        <table>
+            <tr><th>final на...</th><th>Запрещает</th><th>Пример</th></tr>
+            <tr>
+                <td>Примитивной переменной</td>
+                <td>Менять значение</td>
+                <td><code>final int x = 10; // x = 20; ❌</code></td>
+            </tr>
+            <tr>
+                <td>Ссылочной переменной</td>
+                <td>Переназначать ссылку (но <b>объект можно менять!</b>)</td>
+                <td><code>final List&lt;String&gt; list = new ArrayList&lt;&gt;(); list.add("A"); // ✅ list = new ArrayList&lt;&gt;(); // ❌</code></td>
+            </tr>
+            <tr>
+                <td>Методе</td>
+                <td>Переопределять в наследниках</td>
+                <td><code>public final void doIt() { }</code></td>
+            </tr>
+            <tr>
+                <td>Классе</td>
+                <td>Наследовать</td>
+                <td><code>public final class String { }</code></td>
+            </tr>
+            <tr>
+                <td>Параметре метода</td>
+                <td>Менять внутри метода</td>
+                <td><code>void calc(final int x) { // x = 5; ❌ }</code></td>
+            </tr>
+        </table>
+
+        <h3>final + ссылка — важный нюанс!</h3>
+        <pre>final List&lt;String&gt; names = new ArrayList&lt;&gt;();
+names.add("Иван");   // ✅ объект менять можно
+names.add("Мария");  // ✅
+// names = new ArrayList<>(); // ❌ ссылку переназначить нельзя</pre>
+
+        <h3>final-метод</h3>
+        <pre>public class Parent {
+    public final void cannotOverride() {
+        System.out.println("Не переопределишь!");
+    }
+}
+
+public class Child extends Parent {
+    // @Override
+    // public void cannotOverride() { } // ❌ Ошибка! final-метод
+}</pre>
+
+        <h3>final-класс</h3>
+        <pre>public final class String { } // нельзя наследовать
+
+// public class MyString extends String { } // ❌ Ошибка!</pre>
+
+        <div class="answer-block">
+            <code>final</code> запрещает изменение: для примитива — значения, для ссылки — переподвязку (но объект менять можно), для метода — переопределение, для класса — наследование. <code>static final</code> вместе — константа класса.
+        </div>
+
+        <!-- static + final = константа -->
+        <h2>static final — константа</h2>
+        <p>Неизменяемое значение, общее для всех. Именование: <b>UPPER_SNAKE_CASE</b>.</p>
+        <pre>public class Constants {
+    public static final int MAX_USERS = 100;
+    public static final String APP_NAME = "MyApp";
+    public static final double PI = 3.14159;
+}
+
+// Использование:
+if (count > Constants.MAX_USERS) { ... }</pre>
+
+        <!-- Порядок инициализации -->
+        <h2>Порядок инициализации в классе</h2>
+        <p>Важно понимать, что когда выполняется.</p>
+        <pre>public class InitDemo {
+    static { System.out.println("1. Статический блок"); }
+    static String staticField = initStatic();
+
+    { System.out.println("3. Нестатический блок"); }
+    String field = initField();
+
+    public InitDemo() {
+        System.out.println("4. Конструктор");
+    }
+
+    static String initStatic() {
+        System.out.println("2. Статическое поле");
+        return "static";
+    }
+
+    String initField() {
+        System.out.println("3.1. Нестатическое поле");
+        return "field";
+    }
+}
+
+// При первом new InitDemo() вывод:
+// 1. Статический блок
+// 2. Статическое поле
+// 3. Нестатический блок
+// 3.1. Нестатическое поле
+// 4. Конструктор
+
+// При втором new InitDemo() вывод:
+// 3. Нестатический блок       (статическое — только раз!)
+// 3.1. Нестатическое поле
+// 4. Конструктор</pre>
+
+        <table>
+            <tr><th>Когда</th><th>Что выполняется</th></tr>
+            <tr><td>При загрузке класса (1 раз)</td><td>Статические поля и блоки в порядке объявления</td></tr>
+            <tr><td>При создании объекта (каждый раз)</td><td>Нестатические поля и блоки → Конструктор</td></tr>
+        </table>
+
+        <!-- Сокрытие (hiding) -->
+        <h2>Сокрытие статических методов (hiding)</h2>
+        <p>Статические методы <b>не переопределяются</b> — они скрываются. Нет полиморфизма!</p>
+        <pre>class Parent {
+    static void print() { System.out.println("Parent"); }
+}
+
+class Child extends Parent {
+    static void print() { System.out.println("Child"); } // hiding!
+}
+
+Parent p = new Child();
+p.print(); // "Parent" — вызывается по типу ссылки, не объекта!</pre>
+
+        <div class="answer-block">
+            Статические методы не переопределяются, а скрываются (hiding). Вызов идёт по <b>типу ссылки</b>, а не по реальному типу объекта. Это не полиморфизм! <code>Parent p = new Child(); p.staticMethod();</code> вызовет метод <code>Parent</code>.
+        </div>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>В чём разница между static-полем и обычным полем?</li>
+            <li>Можно ли из static-метода обратиться к this?</li>
+            <li>Можно ли менять содержимое final-списка?</li>
+            <li>В каком порядке: статические блоки, нестатические блоки, конструктор?</li>
+            <li>Почему вызов статического метода через ссылку родительского типа вызывает метод родителя, а не потомка?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · static и final</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

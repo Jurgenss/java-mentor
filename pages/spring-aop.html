@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring AOP | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🔪 Spring AOP (Aspect-Oriented Programming)</h1>
+
+        <div class="note">АОП позволяет вынести сквозную функциональность (логирование, транзакции, безопасность) в отдельные модули — аспекты.</div>
+
+        <!-- Зачем -->
+        <h2>Зачем нужен AOP</h2>
+        <p><b>Проблема:</b> сквозная функциональность (cross-cutting concerns) дублируется в каждом методе.</p>
+
+        <pre>// Без AOP — логирование в каждом методе
+public void transferMoney(Long fromId, Long toId, BigDecimal amount) {
+    log.info("Начало перевода: from={}, to={}, amount={}", fromId, toId, amount); // дублируется
+    // бизнес-логика
+    log.info("Перевод выполнен"); // дублируется
+}
+
+public void getBalance(Long accountId) {
+    log.info("Запрос баланса: id={}", accountId); // дублируется
+    // бизнес-логика
+    log.info("Баланс получен"); // дублируется
+}
+
+// С AOP — логирование вынесено в аспект
+@Aspect
+@Component
+public class LoggingAspect {
+    @Before("execution(* com.example.service.*.*(..))")
+    public void logBefore(JoinPoint joinPoint) {
+        log.info("Вызов метода: {}", joinPoint.getSignature().getName());
+    }
+}
+// ВСЕ методы сервиса логируются автоматически!</pre>
+
+        <div class="answer-block">
+            АОП выносит сквозную функциональность (логирование, транзакции, безопасность, кеширование) в отдельные модули — аспекты. Это избавляет от дублирования кода. Spring AOP работает через прокси и применяется к бинам.
+        </div>
+
+        <!-- Основные понятия -->
+        <h2>Основные понятия AOP</h2>
+        <table>
+            <tr><th>Термин</th><th>Что это</th><th>Аннотация / Пример</th></tr>
+            <tr>
+                <td><b>Aspect</b></td>
+                <td>Модуль со сквозной функциональностью</td>
+                <td>Класс с <code>@Aspect</code></td>
+            </tr>
+            <tr>
+                <td><b>Advice</b></td>
+                <td>Действие, выполняемое аспектом</td>
+                <td><code>@Before</code>, <code>@After</code>, <code>@Around</code>, <code>@AfterReturning</code>, <code>@AfterThrowing</code></td>
+            </tr>
+            <tr>
+                <td><b>Pointcut</b></td>
+                <td>Выражение: ГДЕ применять аспект</td>
+                <td><code>execution(* com.example.service.*.*(..))</code></td>
+            </tr>
+            <tr>
+                <td><b>Join Point</b></td>
+                <td>Конкретная точка в программе (метод)</td>
+                <td>Метод <code>transferMoney()</code></td>
+            </tr>
+            <tr>
+                <td><b>Weaving</b></td>
+                <td>Процесс внедрения аспекта в код</td>
+                <td>Spring: runtime через прокси</td>
+            </tr>
+        </table>
+
+        <!-- Типы Advice -->
+        <h2>Типы Advice (советов)</h2>
+        <table>
+            <tr><th>Аннотация</th><th>Когда выполняется</th><th>Пример использования</th></tr>
+            <tr>
+                <td><code>@Before</code></td>
+                <td>ДО вызова метода</td>
+                <td>Логирование входа в метод, проверка прав</td>
+            </tr>
+            <tr>
+                <td><code>@After</code></td>
+                <td>ПОСЛЕ метода (даже если исключение)</td>
+                <td>Очистка ресурсов (finally)</td>
+            </tr>
+            <tr>
+                <td><code>@AfterReturning</code></td>
+                <td>ПОСЛЕ успешного возврата (без исключения)</td>
+                <td>Кеширование результата</td>
+            </tr>
+            <tr>
+                <td><code>@AfterThrowing</code></td>
+                <td>ПОСЛЕ исключения</td>
+                <td>Логирование ошибок, отправка алертов</td>
+            </tr>
+            <tr>
+                <td><code>@Around</code></td>
+                <td>ВОКРУГ метода (до и после)</td>
+                <td>Замер времени, транзакции, повторные попытки</td>
+            </tr>
+        </table>
+
+        <!-- Примеры Pointcut -->
+        <h2>Pointcut — выражения (где срабатывает)</h2>
+        <pre>// Все public методы во всех классах пакета service
+@Before("execution(public * com.example.service.*.*(..))")
+
+// Любой метод с любыми параметрами в классе UserService
+@Before("execution(* com.example.service.UserService.*(..))")
+
+// Только метод transferMoney с конкретными параметрами
+@Before("execution(* com.example.service.*.transferMoney(Long, Long, BigDecimal))")
+
+// Все методы, помеченные аннотацией @Transactional
+@Before("@annotation(org.springframework.transaction.annotation.Transactional)")
+
+// Все методы в классах с аннотацией @RestController
+@Before("@within(org.springframework.web.bind.annotation.RestController)")
+
+// Комбинирование (методы сервиса, НО не в пакете internal)
+@Before("execution(* com.example.service.*.*(..)) && !execution(* com.example.service.internal.*.*(..))")
+
+// Именованный Pointcut (переиспользование)
+@Pointcut("execution(* com.example.service.*.*(..))")
+public void serviceLayer() {}
+
+@Before("serviceLayer()")
+public void logBefore() { ... }
+
+@After("serviceLayer()")
+public void logAfter() { ... }</pre>
+
+        <!-- Примеры -->
+        <h2>Полные примеры аспектов</h2>
+
+        <h3>Логирование вызовов:</h3>
+        <pre>@Aspect
+@Component
+public class LoggingAspect {
+
+    @Before("execution(* com.example.service.*.*(..))")
+    public void logBefore(JoinPoint joinPoint) {
+        String method = joinPoint.getSignature().getName();
+        Object[] args = joinPoint.getArgs();
+        System.out.println("→ Вызов: " + method + " | аргументы: " + Arrays.toString(args));
+    }
+
+    @AfterReturning(pointcut = "execution(* com.example.service.*.*(..))", returning = "result")
+    public void logAfter(JoinPoint joinPoint, Object result) {
+        System.out.println("← Возврат: " + joinPoint.getSignature().getName() + " | результат: " + result);
+    }
+
+    @AfterThrowing(pointcut = "execution(* com.example.service.*.*(..))", throwing = "ex")
+    public void logError(JoinPoint joinPoint, Exception ex) {
+        System.out.println("✖ Ошибка: " + joinPoint.getSignature().getName() + " | " + ex.getMessage());
+    }
+}</pre>
+
+        <h3>Замер времени выполнения (@Around):</h3>
+        <pre>@Aspect
+@Component
+public class TimingAspect {
+
+    @Around("execution(* com.example.service.*.*(..))")
+    public Object measureTime(ProceedingJoinPoint joinPoint) throws Throwable {
+        long start = System.currentTimeMillis();
+
+        Object result = joinPoint.proceed(); // выполняем сам метод!
+
+        long time = System.currentTimeMillis() - start;
+        System.out.println(joinPoint.getSignature().getName() + " выполнен за " + time + "мс");
+
+        return result;
+    }
+}</pre>
+
+        <h3>Проверка прав:</h3>
+        <pre>@Aspect
+@Component
+public class SecurityAspect {
+
+    @Before("@annotation(AdminOnly)")
+    public void checkAdmin(JoinPoint joinPoint) {
+        // Получаем текущего пользователя (например, из SecurityContext)
+        User currentUser = SecurityContext.getCurrentUser();
+        if (!currentUser.isAdmin()) {
+            throw new SecurityException("Доступ запрещён для " + currentUser.getName());
+        }
+    }
+}
+
+// Аннотация-маркер
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface AdminOnly {}
+
+// Использование
+@Service
+public class UserService {
+    @AdminOnly
+    public void deleteUser(Long id) { ... } // только админ!
+}</pre>
+
+        <!-- Как работает -->
+        <h2>Как работает Spring AOP</h2>
+        <p>Spring AOP основан на <b>прокси</b>:</p>
+        <ol>
+            <li>Если класс реализует интерфейс → <b>динамический прокси</b> (JDK Dynamic Proxy)</li>
+            <li>Если класс без интерфейса → <b>CGLIB прокси</b> (наследует класс)</li>
+        </ol>
+
+        <p><b>Ограничения Spring AOP:</b></p>
+        <ul>
+            <li>Работает только с <b>бинами Spring</b></li>
+            <li>Применяется только к <b>public методам</b></li>
+            <li>Не срабатывает при вызове метода внутри того же класса (self-invocation)</li>
+        </ul>
+
+        <pre>@Service
+public class UserService {
+
+    public void publicMethod() {
+        privateMethod(); // вызов изнутри — AOP НЕ сработает!
+    }
+
+    @Transactional // не сработает при вызове из publicMethod()!
+    private void privateMethod() { ... }
+}</pre>
+
+        <div class="answer-block">
+            Spring AOP работает через прокси (JDK Dynamic Proxy для интерфейсов или CGLIB для классов). Применяется только к public-методам бинов. Self-invocation (вызов метода внутри того же класса) не перехватывается — аспект не сработает.
+        </div>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что такое Aspect, Advice, Pointcut, Join Point?</li>
+            <li>Какие типы Advice бывают? В чём разница?</li>
+            <li>Что делает @Around и чем отличается от @Before + @After?</li>
+            <li>Почему @Transactional не работает при вызове метода внутри класса?</li>
+            <li>Какие два типа прокси использует Spring AOP?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Spring AOP</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

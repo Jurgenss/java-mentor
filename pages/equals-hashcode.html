@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>equals() и hashCode() | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>⚖ equals() и hashCode()</h1>
+
+        <div class="note">Одна из самых частых тем на собесе. Контракт, коллизии, правильная реализация — всё здесь.</div>
+
+        <!-- Контракт -->
+        <h2>Контракт equals() и hashCode()</h2>
+        <p>Три главных правила:</p>
+        <ol>
+            <li>Если два объекта равны по <code>equals()</code>, их <code>hashCode()</code> <b>обязаны</b> быть одинаковыми</li>
+            <li>Обратное необязательно: одинаковый hashCode ≠ объекты равны (это <b>коллизия</b>)</li>
+            <li>Переопределяешь <code>equals()</code> — <b>всегда</b> переопределяй <code>hashCode()</code></li>
+        </ol>
+
+        <div class="answer-block">
+            Контракт <code>equals()</code> и <code>hashCode()</code>: равные объекты должны иметь одинаковый хэш-код. Если переопределить только <code>equals()</code>, объекты потеряются в <code>HashSet/HashMap</code>. Всегда переопределяйте оба метода вместе.
+        </div>
+
+        <!-- Что будет, если нарушить -->
+        <h2>Что будет, если нарушить контракт</h2>
+        <p>Объекты потеряются в хэш-коллекциях (<code>HashSet</code>, <code>HashMap</code>).</p>
+
+        <pre>class Person {
+    String name;
+    Person(String name) { this.name = name; }
+
+    @Override
+    public boolean equals(Object o) {
+        return name.equals(((Person) o).name);
+    }
+    // hashCode() НЕ переопределён!
+}
+
+Set&lt;Person&gt; set = new HashSet&lt;&gt;();
+set.add(new Person("Иван"));
+
+System.out.println(set.contains(new Person("Иван"))); // false!
+// Потому что hashCode разный → разная корзина → equals даже не вызывается</pre>
+
+        <h3>Как это работает в HashMap:</h3>
+        <ol>
+            <li>Вычисляется <code>hashCode()</code> ключа</li>
+            <li>По хэшу определяется корзина (bucket)</li>
+            <li>Внутри корзины идёт сравнение через <code>equals()</code></li>
+            <li>Если hashCode разный — до equals() дело не доходит</li>
+        </ol>
+
+        <!-- Перегрузка вместо переопределения -->
+        <h2>Ошибка: перегрузка вместо переопределения</h2>
+        <p>Если написать <code>equals(Person p)</code> вместо <code>equals(Object o)</code> — это <b>перегрузка</b>, а не переопределение. Коллекции вызовут <code>equals(Object)</code> из <code>Object</code>, который сравнивает ссылки.</p>
+
+        <pre>// ❌ Неправильно — перегрузка!
+public boolean equals(Person p) {
+    return name.equals(p.name);
+}
+
+// ✅ Правильно — переопределение!
+@Override
+public boolean equals(Object o) {
+    if (!(o instanceof Person)) return false;
+    Person p = (Person) o;
+    return name.equals(p.name);
+}
+
+// Проверка:
+Person p1 = new Person("Иван");
+Object p2 = new Person("Иван");
+p1.equals(p2); // true при правильном, false при перегрузке!</pre>
+
+        <p>Всегда ставь <code>@Override</code> — компилятор подсветит ошибку.</p>
+
+        <!-- Пять правил equals -->
+        <h2>Пять правил equals() — контракт</h2>
+        <table>
+            <tr><th>Правило</th><th>Значение</th></tr>
+            <tr><td><b>Рефлексивность</b></td><td><code>x.equals(x)</code> всегда <code>true</code></td></tr>
+            <tr><td><b>Симметричность</b></td><td><code>x.equals(y)</code> ⇄ <code>y.equals(x)</code></td></tr>
+            <tr><td><b>Транзитивность</b></td><td>если <code>x.equals(y)</code> и <code>y.equals(z)</code> → <code>x.equals(z)</code></td></tr>
+            <tr><td><b>Консистентность</b></td><td>Результат не меняется при многократном вызове</td></tr>
+            <tr><td><b>null-безопасность</b></td><td><code>x.equals(null)</code> всегда <code>false</code></td></tr>
+        </table>
+
+        <!-- Шаблон правильной реализации -->
+        <h2>Шаблон правильной реализации</h2>
+        <pre>public class Student {
+    private String name;
+    private int age;
+
+    // конструктор, геттеры...
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;                        // та же ссылка — точно равны
+        if (o == null || getClass() != o.getClass())       // null или другой класс
+            return false;
+        Student student = (Student) o;                     // приводим тип
+        return age == student.age                          // примитивы через ==
+            && Objects.equals(name, student.name);         // объекты через Objects.equals
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, age);                    // все поля из equals
+    }
+}</pre>
+
+        <h3>Почему именно так:</h3>
+        <ul>
+            <li><code>this == o</code> — быстрая проверка на ту же ссылку</li>
+            <li><code>getClass() != o.getClass()</code> — строгая проверка класса (альтернатива: <code>instanceof</code>)</li>
+            <li><code>Objects.equals(a, b)</code> — безопасное сравнение (учитывает null)</li>
+            <li><code>Objects.hash(...)</code> — генерирует хэш на основе всех полей</li>
+        </ul>
+
+        <h3>getClass() vs instanceof:</h3>
+        <table>
+            <tr><th>Подход</th><th>Плюс</th><th>Минус</th></tr>
+            <tr>
+                <td><code>getClass() != o.getClass()</code></td>
+                <td>Строго: наследники не равны родителю</td>
+                <td>Может сломать LSP (принцип подстановки)</td>
+            </tr>
+            <tr>
+                <td><code>!(o instanceof MyClass)</code></td>
+                <td>Гибко: наследник может быть равен родителю</td>
+                <td>Может нарушить симметричность</td>
+            </tr>
+        </table>
+
+        <!-- Коллизии -->
+        <h2>Коллизии</h2>
+        <p>Коллизия — когда у двух <b>разных</b> объектов одинаковый <code>hashCode()</code>. Это нормально, но чем реже — тем лучше.</p>
+
+        <pre>// Плохой hashCode — всегда 1, все объекты в одной корзине → O(n)
+@Override
+public int hashCode() {
+    return 1; // формально правильно, но ужасно медленно
+}
+
+// Хороший hashCode — равномерное распределение → O(1)
+@Override
+public int hashCode() {
+    return Objects.hash(name, age);
+}</pre>
+
+        <p>Если коллизия случилась — объекты попадают в одну корзину и сравниваются через <code>equals()</code>. HashMap из O(1) превращается в O(n) для этой корзины.</p>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что будет, если переопределить equals(), но не hashCode()?</li>
+            <li>Чем опасна перегрузка equals вместо переопределения?</li>
+            <li>Почему <code>Objects.equals()</code> лучше, чем <code>name.equals()</code>?</li>
+            <li>Что такое коллизия и как она влияет на производительность HashMap?</li>
+            <li>Могут ли два разных объекта иметь одинаковый hashCode?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · equals() и hashCode()</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

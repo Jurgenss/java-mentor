@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сериализация и Jackson | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>📄 Сериализация и Jackson</h1>
+
+        <div class="note">Сериализация — превращение объекта в поток байтов/JSON для передачи по сети или сохранения. Jackson — самая популярная библиотека для JSON в Java.</div>
+
+        <!-- Что такое -->
+        <h2>Что такое сериализация</h2>
+        <p><b>Сериализация</b> — объект → байты/JSON/XML (сохранить или передать).</p>
+        <p><b>Десериализация</b> — байты/JSON/XML → объект (восстановить).</p>
+
+        <pre>Java-объект:                     JSON:
+User user = new User(             {
+    "Иван",                            "name": "Иван",
+    25,                                "age": 25,
+    "ivan@mail.ru"                     "email": "ivan@mail.ru"
+);                                }
+
+Сериализация:   user  → Jackson → {"name":"Иван","age":25,"email":"ivan@mail.ru"}
+Десериализация: JSON  → Jackson → new User("Иван", 25, "ivan@mail.ru")</pre>
+
+        <div class="answer-block">
+            Сериализация — процесс преобразования объекта в формат для хранения/передачи (JSON, XML, байты). Десериализация — обратный процесс. Jackson — самая популярная библиотека для работы с JSON в Java. В Spring Boot подключается автоматически со starter-web.
+        </div>
+
+        <!-- Jackson -->
+        <h2>Jackson — основная библиотека для JSON</h2>
+        <p>В Spring Boot Jackson подключается автоматически со <code>spring-boot-starter-web</code>. Никаких дополнительных зависимостей.</p>
+
+        <h3>ObjectMapper — главный класс Jackson:</h3>
+        <pre>ObjectMapper mapper = new ObjectMapper(); // в Spring — бин, можно @Autowired
+
+// Объект → JSON (сериализация)
+User user = new User("Иван", 25, "ivan@mail.ru");
+String json = mapper.writeValueAsString(user);
+// → {"name":"Иван","age":25,"email":"ivan@mail.ru"}
+
+// JSON → Объект (десериализация)
+String jsonInput = "{\"name\":\"Пётр\",\"age\":30,\"email\":\"petr@mail.ru\"}";
+User user2 = mapper.readValue(jsonInput, User.class);
+// → User(name=Пётр, age=30, email=petr@mail.ru)</pre>
+
+        <!-- Аннотации Jackson -->
+        <h2>Аннотации Jackson</h2>
+        <table>
+            <tr><th>Аннотация</th><th>Что делает</th><th>Пример</th></tr>
+            <tr>
+                <td><code>@JsonProperty</code></td>
+                <td>Задать имя поля в JSON</td>
+                <td><code>@JsonProperty("full_name") String name;</code></td>
+            </tr>
+            <tr>
+                <td><code>@JsonIgnore</code></td>
+                <td>Исключить поле из JSON</td>
+                <td><code>@JsonIgnore String password;</code></td>
+            </tr>
+            <tr>
+                <td><code>@JsonFormat</code></td>
+                <td>Формат даты/числа</td>
+                <td><code>@JsonFormat(pattern="dd.MM.yyyy") LocalDate date;</code></td>
+            </tr>
+            <tr>
+                <td><code>@JsonInclude</code></td>
+                <td>Не включать null-поля</td>
+                <td><code>@JsonInclude(Include.NON_NULL)</code> (на класс)</td></tr>
+            </tr>
+            <tr>
+                <td><code>@JsonIgnoreProperties</code></td>
+                <td>Игнорировать неизвестные поля при десериализации</td>
+                <td><code>@JsonIgnoreProperties(ignoreUnknown = true)</code></td></tr>
+            </tr>
+            <tr>
+                <td><code>@JsonAlias</code></td>
+                <td>Альтернативные имена для десериализации</td>
+                <td><code>@JsonAlias({"userName", "login"}) String name;</code></td></tr>
+            </tr>
+            <tr>
+                <td><code>@JsonPropertyOrder</code></td>
+                <td>Порядок полей в JSON</td>
+                <td><code>@JsonPropertyOrder({"name", "age", "email"})</code></td></tr>
+            </tr>
+        </table>
+
+        <h3>Пример класса с аннотациями:</h3>
+        <pre>@JsonIgnoreProperties(ignoreUnknown = true) // лишние поля из JSON — игнорируем
+@JsonInclude(JsonInclude.Include.NON_NULL)   // null-поля — не выводим
+public class User {
+
+    private Long id;
+
+    @JsonProperty("full_name")                 // в JSON будет "full_name"
+    @JsonAlias({"userName", "login"})          // при чтении примет и "userName", и "login"
+    private String name;
+
+    @JsonIgnore                                // пароль НИКОГДА не попадёт в JSON
+    private String password;
+
+    @JsonFormat(pattern = "dd.MM.yyyy")
+    private LocalDate birthDate;
+
+    // геттеры/сеттеры...
+}</pre>
+
+        <h3>Настройка Jackson глобально (application.properties):</h3>
+        <pre># Не выводить null-поля
+spring.jackson.default-property-inclusion=non_null
+
+# Формат даты
+spring.jackson.date-format=dd.MM.yyyy
+
+# Не падать, если в JSON есть неизвестные поля
+spring.jackson.deserialization.fail-on-unknown-properties=false
+
+# Красивый отступ в JSON
+spring.jackson.serialization.indent-output=true</pre>
+
+        <!-- Сериализация в Java -->
+        <h2>Сериализация в Java (интерфейс Serializable)</h2>
+        <p>Встроенный механизм Java — преобразование объекта в поток байтов. Используется реже, чем JSON.</p>
+
+        <pre>public class User implements java.io.Serializable {
+    private static final long serialVersionUID = 1L; // обязательно для версионности!
+    private String name;
+    private transient String password; // transient — НЕ сериализуется
+}
+
+// Сериализация (в файл)
+try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("user.ser"))) {
+    oos.writeObject(user);
+}
+
+// Десериализация (из файла)
+try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("user.ser"))) {
+    User user = (User) ois.readObject();
+}</pre>
+
+        <h3>serialVersionUID — зачем:</h3>
+        <ul>
+            <li>Если не указать — Java сгенерирует сама (на основе полей класса)</li>
+            <li>При изменении класса (добавили поле) — UID изменится → старые файлы не прочитаются</li>
+            <li>Указываем явно — контролируем версионность</li>
+        </ul>
+
+        <!-- DTO -->
+        <h2>DTO и сериализация</h2>
+        <p><b>DTO (Data Transfer Object)</b> — отдельный класс для передачи данных. Позволяет не тянуть лишние поля и скрыть структуру БД.</p>
+
+        <pre>// ❌ Плохо — отдаём Entity напрямую (пароль может утечь, циклические ссылки)
+@GetMapping("/{id}")
+public User getUser(@PathVariable Long id) {
+    return userRepo.findById(id).orElseThrow();
+}
+
+// ✅ Хорошо — отдаём DTO
+@GetMapping("/{id}")
+public UserDto getUser(@PathVariable Long id) {
+    User user = userRepo.findById(id).orElseThrow();
+    return new UserDto(user.getName(), user.getEmail()); // пароль не попадёт
+}</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что такое сериализация и десериализация?</li>
+            <li>Для чего нужен ObjectMapper в Jackson?</li>
+            <li>Как исключить поле из JSON? Как переименовать поле в JSON?</li>
+            <li>Зачем нужен serialVersionUID?</li>
+            <li>Почему лучше отдавать DTO, а не Entity напрямую?</li>
+        </ol>
+
+    </main>
+    <footer class="footer"><p>📱 Java Mentor · Сериализация и Jackson</p></footer>
+    <script src="../js/script.js"></script>
+</body>
+</html>

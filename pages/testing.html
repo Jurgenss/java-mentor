@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🧪 Тестирование в Java (JUnit + Mockito)</h1>
+
+        <div class="note">На собесе на джуна обязательно спросят: "Пишете ли вы тесты?" Правильный ответ: "Да, JUnit 5 + Mockito".</div>
+
+        <!-- Зачем -->
+        <h2>Зачем нужны тесты</h2>
+        <table>
+            <tr><th>Причина</th><th>Без тестов</th><th>С тестами</th></tr>
+            <tr><td>Регрессия</td><td>Починил одно — сломал другое, узнаешь от пользователя</td><td>Тесты упали → сразу видно, что сломалось</td></tr>
+            <tr><td>Рефакторинг</td><td>Страшно менять код</td><td>Меняешь смело — тесты проверят</td></tr>
+            <tr><td>Документация</td><td>Непонятно, как метод должен работать</td><td>Тесты = живая документация</td></tr>
+            <tr><td>Деплой</td><td>"Авось прокатит"</td><td>CI/CD: тесты упали → деплой не прошёл</td></tr>
+        </table>
+
+        <div class="answer-block">
+            Тесты — это не "бонус", а обязательная часть разработки. JUnit 5 — фреймворк для модульного тестирования. Mockito — для создания заглушек (моков) зависимостей. Вместе позволяют тестировать логику в изоляции от БД, сети и других сервисов.
+        </div>
+
+        <!-- JUnit -->
+        <h2>JUnit 5 — основные аннотации</h2>
+        <table>
+            <tr><th>Аннотация</th><th>Что делает</th></tr>
+            <tr><td><code>@Test</code></td><td>Помечает метод как тест</td></tr>
+            <tr><td><code>@BeforeEach</code></td><td>Выполняется перед КАЖДЫМ тестом</td></tr>
+            <tr><td><code>@AfterEach</code></td><td>Выполняется после КАЖДОГО теста</td></tr>
+            <tr><td><code>@BeforeAll</code></td><td>Выполняется ОДИН раз перед всеми тестами (метод static)</td></tr>
+            <tr><td><code>@AfterAll</code></td><td>Выполняется ОДИН раз после всех тестов (static)</td></tr>
+            <tr><td><code>@DisplayName</code></td><td>Человеческое название теста</td></tr>
+            <tr><td><code>@Disabled</code></td><td>Отключить тест</td></tr>
+            <tr><td><code>@ParameterizedTest</code></td><td>Запустить тест с разными параметрами</td></tr>
+            <tr><td><code>@RepeatedTest(n)</code></td><td>Повторить тест n раз</td></tr>
+        </table>
+
+        <h3>Assertions — проверки:</h3>
+        <table>
+            <tr><th>Метод</th><th>Пример</th></tr>
+            <tr><td><code>assertEquals(expected, actual)</code></td><td><code>assertEquals(4, 2 + 2)</code></td></tr>
+            <tr><td><code>assertTrue(condition)</code></td><td><code>assertTrue(list.isEmpty())</code></td></tr>
+            <tr><td><code>assertFalse(condition)</code></td><td><code>assertFalse(list.isEmpty())</code></td></tr>
+            <tr><td><code>assertNull(obj)</code></td><td><code>assertNull(result)</code></td></tr>
+            <tr><td><code>assertNotNull(obj)</code></td><td><code>assertNotNull(user)</code></td></tr>
+            <tr><td><code>assertThrows(Class, lambda)</code></td><td><code>assertThrows(RuntimeException.class, () -> calc.divide(1, 0))</code></td></tr>
+            <tr><td><code>assertAll(...)</code></td><td>Группа проверок (все выполнятся, даже если одна упадёт)</td></tr>
+        </table>
+
+        <!-- Пример теста -->
+        <h2>Простой пример теста</h2>
+        <pre>// Класс, который тестируем
+public class Calculator {
+    public int sum(int a, int b) { return a + b; }
+    public int divide(int a, int b) {
+        if (b == 0) throw new IllegalArgumentException("Деление на ноль!");
+        return a / b;
+    }
+}
+
+// Тест
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class CalculatorTest {
+
+    private Calculator calc;
+
+    @BeforeEach
+    void setUp() {
+        calc = new Calculator(); // создаём новый перед каждым тестом
+    }
+
+    @Test
+    @DisplayName("Сумма двух чисел")
+    void testSum() {
+        assertEquals(5, calc.sum(2, 3));
+        assertEquals(0, calc.sum(-1, 1));
+        assertEquals(-5, calc.sum(-2, -3));
+    }
+
+    @Test
+    @DisplayName("Деление на ноль должно бросать исключение")
+    void testDivideByZero() {
+        assertThrows(IllegalArgumentException.class,
+            () -> calc.divide(10, 0)
+        );
+    }
+
+    @Test
+    @DisplayName("Обычное деление")
+    void testDivide() {
+        assertEquals(5, calc.divide(10, 2));
+    }
+}</pre>
+
+        <!-- Жизненный цикл -->
+        <h2>Жизненный цикл теста</h2>
+        <pre>@BeforeAll (static) — 1 раз перед всеми тестами
+    @BeforeEach — перед каждым тестом
+        @Test — тест 1
+    @AfterEach — после теста 1
+    @BeforeEach — перед каждым тестом
+        @Test — тест 2
+    @AfterEach — после теста 2
+@AfterAll (static) — 1 раз после всех тестов</pre>
+
+        <!-- Mockito -->
+        <h2>Mockito — моки и заглушки</h2>
+        <p><b>Проблема:</b> UserService зависит от UserRepository (БД). Как тестировать UserService без реальной БД?</p>
+        <p><b>Решение:</b> Mockito создаёт "заглушку" UserRepository, которой можно управлять.</p>
+
+        <h3>Три главных метода Mockito:</h3>
+        <table>
+            <tr><th>Метод</th><th>Что делает</th></tr>
+            <tr><td><code>Mockito.mock(Class)</code></td><td>Создать мок-объект</td></tr>
+            <tr><td><code>Mockito.when(mock.method()).thenReturn(value)</code></td><td>Настроить поведение: "когда вызовут метод — верни value"</td></tr>
+            <tr><td><code>Mockito.verify(mock).method()</code></td><td>Проверить, что метод БЫЛ вызван</td></tr>
+        </table>
+
+        <h3>Аннотации Mockito:</h3>
+        <table>
+            <tr><th>Аннотация</th><th>Что делает</th></tr>
+            <tr><td><code>@Mock</code></td><td>Создать мок</td></tr>
+            <tr><td><code>@InjectMocks</code></td><td>Внедрить моки в тестируемый объект</td></tr>
+            <tr><td><code>@ExtendWith(MockitoExtension.class)</code></td><td>Включить Mockito в JUnit 5</td></tr>
+        </table>
+
+        <!-- Пример с Mockito -->
+        <h2>Полный пример с Mockito</h2>
+        <pre>// Сервис, который тестируем
+@Service
+public class UserService {
+    @Autowired
+    private UserRepository repo;
+
+    public User findById(Long id) {
+        return repo.findById(id)
+            .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    public User create(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Имя обязательно");
+        }
+        return repo.save(new User(name));
+    }
+}
+
+// Тест с Mockito
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest {
+
+    @Mock
+    private UserRepository repo; // мок — не настоящая БД!
+
+    @InjectMocks
+    private UserService service; // сюда внедрятся моки
+
+    @Test
+    @DisplayName("Найти пользователя по ID — успешно")
+    void testFindById_Success() {
+        // Given (дано): настраиваем мок
+        User expected = new User(1L, "Иван");
+        when(repo.findById(1L)).thenReturn(Optional.of(expected));
+
+        // When (когда): вызываем метод
+        User actual = service.findById(1L);
+
+        // Then (тогда): проверяем результат
+        assertEquals("Иван", actual.getName());
+        verify(repo).findById(1L); // убеждаемся, что repo.findById БЫЛ вызван
+    }
+
+    @Test
+    @DisplayName("Найти пользователя — не найден → исключение")
+    void testFindById_NotFound() {
+        when(repo.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class,
+            () -> service.findById(999L)
+        );
+    }
+
+    @Test
+    @DisplayName("Создать пользователя — пустое имя → ошибка")
+    void testCreate_EmptyName() {
+        assertThrows(IllegalArgumentException.class,
+            () -> service.create("")
+        );
+        verify(repo, never()).save(any()); // repo.save НЕ вызывался
+    }
+}</pre>
+
+        <!-- Паттерн Given-When-Then -->
+        <h2>Паттерн Given-When-Then (AAA)</h2>
+        <table>
+            <tr><th>Фаза</th><th>Что делаем</th><th>Mockito</th></tr>
+            <tr><td><b>Given (Arrange)</b></td><td>Подготавливаем данные, настраиваем моки</td><td><code>when(...).thenReturn(...)</code></td></tr>
+            <tr><td><b>When (Act)</b></td><td>Вызываем тестируемый метод</td><td>Сам вызов метода</td></tr>
+            <tr><td><b>Then (Assert)</b></td><td>Проверяем результат</td><td><code>assertEquals</code>, <code>verify(...)</code></td></tr>
+        </table>
+
+        <!-- Интеграционные тесты -->
+        <h2>Интеграционные тесты (Spring Boot)</h2>
+        <pre>@SpringBootTest
+@AutoConfigureMockMvc
+class UserControllerIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc; // эмулирует HTTP-запросы без реального сервера
+
+    @Test
+    void testGetAllUsers() throws Exception {
+        mockMvc.perform(get("/api/users"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].name").value("Иван"));
+    }
+
+    @Test
+    void testCreateUser() throws Exception {
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\": \"Пётр\", \"email\": \"peter@mail.ru\"}"))
+            .andExpect(status().isCreated());
+    }
+}</pre>
+
+        <!-- Пирамида тестов -->
+        <h2>Пирамида тестов</h2>
+        <pre>       /\
+      /  \       E2E (end-to-end) — мало, самые медленные
+     /    \
+    /──────\    Интеграционные — среднее количество
+   /        \
+  /──────────\  Unit-тесты — много, самые быстрые</pre>
+        <ul>
+            <li><b>Unit-тесты</b> (70%) — тестируют один класс в изоляции (JUnit + Mockito)</li>
+            <li><b>Интеграционные</b> (20%) — тестируют взаимодействие с БД, сетью (@SpringBootTest)</li>
+            <li><b>E2E</b> (10%) — тестируют всё приложение целиком (Selenium, Testcontainers)</li>
+        </ul>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Какие аннотации JUnit 5 ты знаешь?</li>
+            <li>Для чего нужен Mockito? Что делают when/verify?</li>
+            <li>Что такое Given-When-Then?</li>
+            <li>Чем unit-тест отличается от интеграционного?</li>
+            <li>Как проверить, что метод бросил исключение?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Тестирование</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI/CD | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🔄 CI/CD — Continuous Integration / Continuous Delivery</h1>
+
+        <div class="note">CI/CD — практика автоматизации сборки, тестирования и деплоя. На джуна спросят: "Что такое CI/CD? Какие инструменты знаете?"</div>
+
+        <!-- CI -->
+        <h2>CI (Continuous Integration) — непрерывная интеграция</h2>
+        <p><b>Суть:</b> разработчики сливают код в общую ветку несколько раз в день. Каждый пуш автоматически собирается и тестируется.</p>
+
+        <pre>Разработчик пушит код → GitHub/GitLab
+                            ↓
+                    CI-сервер (Jenkins/GitHub Actions)
+                            ↓
+                    1. mvn clean compile
+                    2. mvn test (все тесты)
+                    3. mvn package (сборка JAR)
+                            ↓
+                    Успех ✅ → можно деплоить
+                    Провал ❌ → уведомление в Slack/почту, билд красный</pre>
+
+        <div class="answer-block">
+            CI (Continuous Integration) — практика частого слияния кода с автоматической сборкой и тестами. Позволяет быстро находить конфликты и ошибки. Каждый коммит проверяется: код компилируется, тесты проходят. Если что-то сломалось — узнаём сразу, а не перед релизом.
+        </div>
+
+        <!-- CD -->
+        <h2>CD (Continuous Delivery / Deployment)</h2>
+        <table>
+            <tr><th></th><th>Continuous Delivery</th><th>Continuous Deployment</th></tr>
+            <tr><td>Деплой</td><td>Ручной (нажать кнопку)</td><td>Автоматический</td></tr>
+            <tr><td>Пример</td><td>Собрали → ждём подтверждения → деплоим</td><td>Собрали → сразу в прод</td></tr>
+            <tr><td>Когда</td><td>Большинство проектов</td><td>Высокий уровень доверия к тестам</td></tr>
+        </table>
+
+        <pre>CI                              CD
+Сборка → Тесты → Артефакт  →  Деплой на тестовый стенд
+                                ↓
+                          Ручные/авто тесты
+                                ↓
+                          Деплой в прод (по кнопке или автоматически)</pre>
+
+        <!-- GitHub Actions -->
+        <h2>GitHub Actions — пример для Java</h2>
+        <p>CI/CD встроен в GitHub. Конфигурация — YAML-файл в репозитории.</p>
+
+        <pre># .github/workflows/build.yml
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Run tests
+        run: mvn test
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar</pre>
+
+        <h3>Полный CI/CD с Docker и деплоем:</h3>
+        <pre># .github/workflows/deploy.yml
+name: Deploy to Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t myapp:${{ github.sha }} .
+
+      - name: Push to Docker Registry
+        run: |
+          docker tag myapp:${{ github.sha }} registry.example.com/myapp:latest
+          docker push registry.example.com/myapp:latest
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            docker pull registry.example.com/myapp:latest
+            docker compose -f /opt/myapp/docker-compose.yml up -d</pre>
+
+        <!-- Инструменты -->
+        <h2>Инструменты CI/CD</h2>
+        <table>
+            <tr><th>Инструмент</th><th>Тип</th><th>Особенности</th></tr>
+            <tr><td><b>GitHub Actions</b></td><td>Облачный</td><td>Встроен в GitHub, YAML, просто</td></tr>
+            <tr><td><b>GitLab CI</b></td><td>Облачный/On-premise</td><td>Встроен в GitLab, мощный</td></tr>
+            <tr><td><b>Jenkins</b></td><td>On-premise</td><td>Самый гибкий, много плагинов, сложнее в настройке</td></tr>
+            <tr><td><b>TeamCity</b></td><td>On-premise</td><td>От JetBrains, хорош для Java</td></tr>
+            <tr><td><b>CircleCI</b></td><td>Облачный</td><td>Быстрый, параллельные job'ы</td></tr>
+        </table>
+
+        <!-- DevOps -->
+        <h2>DevOps — общая картина</h2>
+        <pre>DevOps = Development (разработка) + Operations (эксплуатация)
+
+Практики DevOps:
+├── CI/CD (автоматизация сборки и деплоя)
+├── IaC (Infrastructure as Code — Terraform, Ansible)
+├── Мониторинг (Prometheus, Grafana)
+├── Логирование (ELK: Elasticsearch + Logstash + Kibana)
+└── Контейнеризация (Docker + Kubernetes)</pre>
+
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что такое CI и зачем он нужен?</li>
+            <li>Чем Continuous Delivery отличается от Continuous Deployment?</li>
+            <li>Какие инструменты CI/CD знаешь?</li>
+            <li>Из чего состоит типичный GitHub Actions workflow?</li>
+            <li>Что такое DevOps и какие практики в него входят?</li>
+        </ol>
+
+    </main>
+    <footer class="footer"><p>📱 Java Mentor · CI/CD</p></footer>
+    <script src="../js/script.js"></script>
+</body>
+</html>

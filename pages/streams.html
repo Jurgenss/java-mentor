@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream API | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🌊 Stream API</h1>
+
+        <div class="note">Stream — не коллекция, а конвейер для обработки данных. Появился в Java 8. Позволяет писать меньше кода и делать его читаемым.</div>
+
+        <!-- Что такое Stream -->
+        <h2>Что такое Stream</h2>
+        <p>Stream — это <b>последовательность элементов</b>, которую можно обработать в функциональном стиле.</p>
+        <ul>
+            <li>❌ Не хранит данные (в отличие от коллекций)</li>
+            <li>❌ Не меняет исходный источник</li>
+            <li>✅ Обрабатывает данные "на лету" (lazy)</li>
+            <li>✅ Можно объединять операции в цепочку (pipeline)</li>
+        </ul>
+
+        <div class="answer-block">
+            Stream — это не коллекция, а способ обработать последовательность элементов в функциональном стиле. Не хранит данные, не меняет источник. Операции: промежуточные (lazy) и терминальные (запускают цепочку).
+        </div>
+
+        <!-- Создание Stream -->
+        <h2>Способы создания Stream</h2>
+        <pre>// Из коллекции
+collection.stream()                      // обычный stream
+collection.parallelStream()              // параллельный stream
+
+// Из массива
+Arrays.stream(array)
+Arrays.stream(array, start, end)
+
+// Из значений
+Stream.of("A", "B", "C")
+Stream.ofNullable(value)                 // пустой если null
+
+// Числовые потоки (int, long, double)
+IntStream.range(1, 10)                   // 1..9
+IntStream.rangeClosed(1, 10)             // 1..10
+IntStream.of(1, 2, 3)
+
+// Из строки
+"abc".chars()                            // IntStream символов
+
+// Бесконечные (ограничивать limit()!)
+Stream.iterate(0, n -> n + 1)            // 0, 1, 2, ...
+Stream.generate(Math::random)            // случайные числа
+
+// Пустой
+Stream.empty()
+
+// Из Builder
+Stream.&lt;String&gt;builder().add("A").add("B").build()</pre>
+
+        <!-- Intermediate операции -->
+        <h2>Intermediate (промежуточные) операции</h2>
+        <p>Возвращают новый Stream. <b>Ленивые</b> — не выполняются, пока не вызвана терминальная операция.</p>
+
+        <table>
+            <tr><th>Метод</th><th>Что делает</th><th>Пример</th></tr>
+            <tr>
+                <td><code>filter(Predicate)</code></td>
+                <td>Фильтрует по условию</td>
+                <td><code>.filter(x -> x > 5)</code></td>
+            </tr>
+            <tr>
+                <td><code>map(Function)</code></td>
+                <td>Преобразует каждый элемент</td>
+                <td><code>.map(String::toUpperCase)</code></td>
+            </tr>
+            <tr>
+                <td><code>flatMap(Function)</code></td>
+                <td>"Схлопывает" вложенные структуры</td>
+                <td><code>.flatMap(List::stream)</code></td>
+            </tr>
+            <tr>
+                <td><code>distinct()</code></td>
+                <td>Убирает дубликаты</td>
+                <td><code>.distinct()</code></td>
+            </tr>
+            <tr>
+                <td><code>sorted()</code></td>
+                <td>Сортирует (natural order)</td>
+                <td><code>.sorted()</code></td>
+            </tr>
+            <tr>
+                <td><code>sorted(Comparator)</code></td>
+                <td>Сортирует по правилу</td>
+                <td><code>.sorted(Comparator.reverseOrder())</code></td>
+            </tr>
+            <tr>
+                <td><code>peek(Consumer)</code></td>
+                <td>"Подсматривает" (для отладки!)</td>
+                <td><code>.peek(System.out::println)</code></td>
+            </tr>
+            <tr>
+                <td><code>limit(n)</code></td>
+                <td>Первые n элементов</td>
+                <td><code>.limit(5)</code></td>
+            </tr>
+            <tr>
+                <td><code>skip(n)</code></td>
+                <td>Пропускает первые n</td>
+                <td><code>.skip(3)</code></td>
+            </tr>
+            <tr>
+                <td><code>takeWhile(Predicate)</code></td>
+                <td>Берёт пока условие true</td>
+                <td><code>.takeWhile(x -> x < 10)</code></td>
+            </tr>
+            <tr>
+                <td><code>dropWhile(Predicate)</code></td>
+                <td>Пропускает пока условие true</td>
+                <td><code>.dropWhile(x -> x < 10)</code></td>
+            </tr>
+            <tr>
+                <td><code>mapToInt(Function)</code></td>
+                <td>Преобразует в IntStream</td>
+                <td><code>.mapToInt(Integer::intValue)</code></td>
+            </tr>
+            <tr>
+                <td><code>mapToLong(Function)</code></td>
+                <td>Преобразует в LongStream</td>
+                <td><code>.mapToLong(Long::longValue)</code></td>
+            </tr>
+            <tr>
+                <td><code>mapToDouble(Function)</code></td>
+                <td>Преобразует в DoubleStream</td>
+                <td><code>.mapToDouble(Double::doubleValue)</code></td>
+            </tr>
+        </table>
+
+        <!-- Terminal операции -->
+        <h2>Terminal (терминальные) операции</h2>
+        <p>Запускают всю цепочку и возвращают результат. После терминальной операции Stream больше <b>нельзя использовать</b>.</p>
+
+        <table>
+            <tr><th>Метод</th><th>Что возвращает</th><th>Описание</th></tr>
+            <tr>
+                <td><code>collect(Collector)</code></td>
+                <td>Коллекция / Map / String</td>
+                <td>Собирает элементы (самый частый)</td>
+            </tr>
+            <tr>
+                <td><code>count()</code></td>
+                <td><code>long</code></td>
+                <td>Количество элементов</td>
+            </tr>
+            <tr>
+                <td><code>forEach(Consumer)</code></td>
+                <td><code>void</code></td>
+                <td>Действие для каждого</td>
+            </tr>
+            <tr>
+                <td><code>forEachOrdered(Consumer)</code></td>
+                <td><code>void</code></td>
+                <td>Для parallelStream — сохраняет порядок</td>
+            </tr>
+            <tr>
+                <td><code>findFirst()</code></td>
+                <td><code>Optional&lt;T&gt;</code></td>
+                <td>Первый элемент</td>
+            </tr>
+            <tr>
+                <td><code>findAny()</code></td>
+                <td><code>Optional&lt;T&gt;</code></td>
+                <td>Любой элемент (для parallel)</td>
+            </tr>
+            <tr>
+                <td><code>anyMatch(Predicate)</code></td>
+                <td><code>boolean</code></td>
+                <td>Хотя бы один подходит</td>
+            </tr>
+            <tr>
+                <td><code>allMatch(Predicate)</code></td>
+                <td><code>boolean</code></td>
+                <td>Все подходят</td>
+            </tr>
+            <tr>
+                <td><code>noneMatch(Predicate)</code></td>
+                <td><code>boolean</code></td>
+                <td>Ни один не подходит</td>
+            </tr>
+            <tr>
+                <td><code>min(Comparator)</code></td>
+                <td><code>Optional&lt;T&gt;</code></td>
+                <td>Минимальный</td>
+            </tr>
+            <tr>
+                <td><code>max(Comparator)</code></td>
+                <td><code>Optional&lt;T&gt;</code></td>
+                <td>Максимальный</td>
+            </tr>
+            <tr>
+                <td><code>reduce(accumulator)</code></td>
+                <td><code>Optional&lt;T&gt;</code></td>
+                <td>Свёртка (сумма, произведение...)</td>
+            </tr>
+            <tr>
+                <td><code>reduce(identity, acc)</code></td>
+                <td><code>T</code></td>
+                <td>Свёртка с начальным значением</td>
+            </tr>
+            <tr>
+                <td><code>toArray()</code></td>
+                <td><code>Object[]</code></td>
+                <td>В массив</td>
+            </tr>
+        </table>
+
+        <!-- Collectors -->
+        <h2>Collectors — основные методы</h2>
+        <pre>// В список
+.collect(Collectors.toList())                    // List&lt;T&gt;
+.collect(Collectors.toUnmodifiableList())        // Неизменяемый (Java 10+)
+
+// В множество
+.collect(Collectors.toSet())                     // Set&lt;T&gt;
+.collect(Collectors.toCollection(TreeSet::new))  // Любая коллекция
+
+// В Map
+.collect(Collectors.toMap(                      // Map&lt;K, V&gt;
+    Person::getId,          // key
+    Function.identity(),    // value (сам объект)
+    (old, new) -> new       // resolver при дубликатах
+))
+
+// В строку
+.collect(Collectors.joining())                   // "abc"
+.collect(Collectors.joining(", "))               // "a, b, c"
+.collect(Collectors.joining(", ", "[", "]"))     // "[a, b, c]"
+
+// Группировка
+.collect(Collectors.groupingBy(Person::getCity)) // Map&lt;City, List&lt;Person&gt;&gt;
+.collect(Collectors.groupingBy(                  // С доп. коллектором
+    Person::getCity,
+    Collectors.counting()                        // Map&lt;City, Long&gt;
+))
+
+// Суммирование
+.collect(Collectors.summingInt(Person::getAge))  // int
+.collect(Collectors.summingLong(...))
+.collect(Collectors.summingDouble(...))
+
+// Усреднение
+.collect(Collectors.averagingInt(Person::getAge)) // double
+
+// Статистика (count, sum, min, max, average)
+.collect(Collectors.summarizingInt(Person::getAge)) // IntSummaryStatistics
+
+// Подсчёт
+.collect(Collectors.counting())                   // long
+
+// Разделение на две группы (по условию)
+.collect(Collectors.partitioningBy(               // Map&lt;Boolean, List&gt;
+    p -> p.getAge() >= 18
+))
+
+// Приведение
+.collect(Collectors.reducing(0, Person::getAge, Integer::sum))
+.collect(Collectors.mapping(Person::getName, Collectors.toList()))
+
+// Максимум / минимум
+.collect(Collectors.maxBy(Comparator.comparing(Person::getAge)))
+.collect(Collectors.minBy(Comparator.comparing(Person::getAge)))</pre>
+
+        <!-- Примеры -->
+        <h2>Типичные задачи и решения</h2>
+        <pre>List&lt;Integer&gt; numbers = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+// Сумма квадратов чётных чисел
+int result = numbers.stream()
+    .filter(x -> x % 2 == 0)      // 2, 4, 6, 8, 10
+    .mapToInt(x -> x * x)         // 4, 16, 36, 64, 100
+    .sum();                        // 220
+
+// Список имён в верхнем регистре через запятую
+List&lt;String&gt; names = List.of("анна", "иван", "пётр");
+String joined = names.stream()
+    .map(String::toUpperCase)     // АННА, ИВАН, ПЁТР
+    .sorted()
+    .collect(Collectors.joining(", "));
+// → "АННА, ИВАН, ПЁТР"
+
+// Группировка людей по городу
+Map&lt;String, List&lt;Person&gt;&gt; byCity = people.stream()
+    .collect(Collectors.groupingBy(Person::getCity));
+
+// Самый старый человек в каждом городе
+Map&lt;String, Optional&lt;Person&gt;&gt; oldest = people.stream()
+    .collect(Collectors.groupingBy(
+        Person::getCity,
+        Collectors.maxBy(Comparator.comparing(Person::getAge))
+    ));
+
+// Список всех уникальных тегов из списка статей
+List&lt;Article&gt; articles = ...;
+Set&lt;String&gt; allTags = articles.stream()
+    .flatMap(article -> article.getTags().stream()) // "схлопываем"
+    .collect(Collectors.toSet());</pre>
+
+        <!-- Ленивость -->
+        <h2>Ленивость (lazy evaluation)</h2>
+        <pre>// Без терминальной операции ничего не произойдёт!
+Stream.of("A", "B", "C")
+    .peek(s -> System.out.println("Обработано: " + s))
+    .filter(s -> s.startsWith("B"));
+// НИЧЕГО не выведет! Нет терминальной операции!
+
+// Добавили терминальную — всё выполнилось
+Stream.of("A", "B", "C")
+    .peek(s -> System.out.println("Обработано: " + s))
+    .filter(s -> s.startsWith("B"))
+    .count(); // терминальная → выполнится</pre>
+
+        <!-- Нюансы -->
+        <h2>Важные нюансы</h2>
+        <ul>
+            <li><b>Stream нельзя переиспользовать</b> — после терминальной операции он закрыт. Нужно создавать новый.</li>
+            <li><b>Не меняйте источник</b> внутри stream-операций — это anti-pattern.</li>
+            <li><b>peek() — только для отладки!</b> Не используйте для бизнес-логики.</li>
+            <li><b>parallelStream()</b> — не всегда быстрее. Тестируйте.</li>
+            <li><b>null в коллекции</b> — Stream нормально обрабатывает null-элементы (но лучше избегать).</li>
+        </ul>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что такое Stream и чем он отличается от коллекции?</li>
+            <li>Какие операции называются промежуточными, а какие терминальными?</li>
+            <li>Что значит "ленивость" Stream API?</li>
+            <li>Как сгруппировать элементы по какому-то признаку?</li>
+            <li>Можно ли использовать один Stream дважды?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Stream API</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

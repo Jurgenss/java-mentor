@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Mentor — Справочник Junior</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header">
+        <h1>☕ Java Mentor</h1>
+        <p class="subtitle">Полный справочник Junior-разработчика</p>
+        <div class="search-wrap">
+            <input type="text" id="searchInput" placeholder="🔍 Поиск по темам... (ООП, коллекции, String, equals...)" oninput="searchTopics()">
+            <button class="btn btn-theme" onclick="toggleTheme()" title="Сменить тему">🌓 Тема</button>
+        </div>
+    </header>
+
+    <main class="topics-grid">
+        <a href="pages/oop.html" class="topic-card">
+            <span class="icon">🏛</span>
+            <h2>ООП — 4 принципа</h2>
+            <p>Инкапсуляция, Наследование, Полиморфизм, Абстракция. Overload vs Override.</p>
+        </a>
+
+        <a href="pages/interfaces.html" class="topic-card">
+            <span class="icon">🔷</span>
+            <h2>Интерфейсы и Абстрактные классы</h2>
+            <p>Отличия, default-методы, проблема ромба, когда что использовать.</p>
+        </a>
+
+        <a href="pages/access-modifiers.html" class="topic-card">
+            <span class="icon">🔐</span>
+            <h2>Модификаторы доступа</h2>
+            <p>private, default, protected, public — таблица видимости.</p>
+        </a>
+
+        <a href="pages/static-final.html" class="topic-card">
+            <span class="icon">📌</span>
+            <h2>static и final</h2>
+            <p>Принадлежность классу, константы, порядок инициализации, hiding.</p>
+        </a>
+
+        <a href="pages/equals-hashcode.html" class="topic-card">
+            <span class="icon">⚖</span>
+            <h2>equals() и hashCode()</h2>
+            <p>Контракт, коллизии, шаблон правильной реализации.</p>
+        </a>
+
+        <a href="pages/generics.html" class="topic-card">
+            <span class="icon">🧬</span>
+            <h2>Generics (обобщения)</h2>
+            <p>Типобезопасность, wildcards, PECS, type erasure.</p>
+        </a>
+
+        <a href="pages/strings.html" class="topic-card">
+            <span class="icon">📝</span>
+            <h2>String</h2>
+            <p>Неизменяемость, String Pool, StringBuilder vs StringBuffer.</p>
+        </a>
+
+        <a href="pages/collections.html" class="topic-card">
+            <span class="icon">📚</span>
+            <h2>Коллекции</h2>
+            <p>Иерархия, List/Set/Map/Queue, ArrayList vs LinkedList, HashMap.</p>
+        </a>
+
+        <a href="pages/streams.html" class="topic-card">
+            <span class="icon">🌊</span>
+            <h2>Stream API</h2>
+            <p>Intermediate/Terminal, коллекторы, ленивость.</p>
+        </a>
+
+        <a href="pages/lambdas.html" class="topic-card">
+            <span class="icon">🎯</span>
+            <h2>Лямбды</h2>
+            <p>Функциональные интерфейсы, Predicate, Consumer, method reference.</p>
+        </a>
+
+        <a href="pages/exceptions.html" class="topic-card">
+            <span class="icon">⚠</span>
+            <h2>Исключения</h2>
+            <p>Иерархия, checked/unchecked, throw/throws, finally.</p>
+        </a>
+
+        <a href="pages/multithreading.html" class="topic-card">
+            <span class="icon">🧵</span>
+            <h2>Многопоточность</h2>
+            <p>Thread/Runnable, synchronized/volatile, wait/notify.</p>
+        </a>
+
+        <a href="pages/sql-jdbc.html" class="topic-card">
+            <span class="icon">🗄</span>
+            <h2>SQL и JDBC</h2>
+            <p>JOIN, WHERE/HAVING, 5 шагов JDBC, транзакции, PreparedStatement.</p>
+        </a>
+
+        <a href="pages/spring-core.html" class="topic-card">
+            <span class="icon">🍃</span>
+            <h2>Spring Core</h2>
+            <p>IoC, DI, бины, scope, @Component vs @Bean.</p>
+        </a>
+
+        <a href="pages/spring-aop.html" class="topic-card">
+            <span class="icon">🔪</span>
+            <h2>Spring AOP</h2>
+            <p>Аспекты, Advice, Pointcut, Join Point.</p>
+        </a>
+
+                <a href="pages/spring-boot.html" class="topic-card">
+            <span class="icon">🚀</span>
+            <h2>Spring Boot</h2>
+            <p>Автоконфигурация, стартеры, application.properties, Actuator, профили.</p>
+        </a>
+
+        <a href="pages/http-rest.html" class="topic-card">
+            <span class="icon">🌐</span>
+            <h2>HTTP и REST</h2>
+            <p>Методы, коды ответов, принципы REST.</p>
+        </a>
+
+        <a href="pages/git.html" class="topic-card">
+            <span class="icon">🔧</span>
+            <h2>Git</h2>
+            <p>Основные команды, merge vs rebase.</p>
+        </a>
+
+        <a href="pages/jdbc-jpa-hibernate.html" class="topic-card">
+            <span class="icon">📊</span>
+            <h2>JDBC → JPA → Hibernate</h2>
+            <p>Эволюция работы с БД, когда что использовать.</p>
+        </a>
+
+        <a href="pages/architecture.html" class="topic-card">
+            <span class="icon">🏗</span>
+            <h2>Архитектура high-load</h2>
+            <p>CQRS, кеширование, асинхронность, Kafka, Redis.</p>
+        </a>
+
+        <a href="pages/methods-reference.html" class="topic-card">
+            <span class="icon">📋</span>
+            <h2>Методы по классам</h2>
+            <p>Быстрый поиск: все методы String, List, Map, Stream, Optional, Collections.</p>
+        </a>
+
+        <a href="pages/algorithms.html" class="topic-card">
+            <span class="icon">🧠</span>
+            <h2>Алгоритмы для собеса</h2>
+            <p>10 задач: палиндром, анаграмма, Two Sum, скобки, Фибоначчи и другие. С подсказками и решениями.</p>
+        </a>        
+
+        <a href="pages/spring-mvc.html" class="topic-card">
+            <span class="icon">🌐</span>
+            <h2>Spring MVC</h2>
+            <p>DispatcherServlet, контроллеры, @RequestParam/@PathVariable, валидация, CORS, Interceptor.</p>
+        </a>
+
+        <a href="pages/microservices.html" class="topic-card">
+            <span class="icon">🧩</span>
+            <h2>Микросервисы</h2>
+            <p>Монолит vs микросервисы, Service Discovery, API Gateway, Circuit Breaker, Saga.</p>
+        </a>
+
+        <a href="pages/spring-security.html" class="topic-card">
+            <span class="icon">🔐</span>
+            <h2>Spring Security</h2>
+            <p>Аутентификация, JWT, BCrypt, @PreAuthorize, SecurityFilterChain, защита API.</p>
+        </a>
+
+        <a href="pages/testing.html" class="topic-card">
+            <span class="icon">🧪</span>
+            <h2>Тестирование</h2>
+            <p>JUnit 5, Mockito, when/verify, Given-When-Then, интеграционные тесты, пирамида тестов.</p>
+        </a>
+
+        <a href="pages/docker.html" class="topic-card">
+            <span class="icon">🐳</span>
+            <h2>Docker</h2>
+            <p>Образы, контейнеры, Dockerfile, docker-compose, multi-stage build, PostgreSQL в Docker.</p>
+        </a>
+
+        <a href="pages/redis.html" class="topic-card">
+            <span class="icon">📦</span>
+            <h2>Redis</h2>
+            <p>In-memory кеш, типы данных, @Cacheable, TTL, стратегии инвалидации.</p>
+        </a>
+
+        <a href="pages/kafka.html" class="topic-card">
+            <span class="icon">📨</span>
+            <h2>Apache Kafka</h2>
+            <p>Брокер сообщений, Producer/Consumer, топики, партиции, Spring Kafka.</p>
+        </a>
+
+        <a href="pages/design-patterns.html" class="topic-card">
+            <span class="icon">🎨</span>
+            <h2>Паттерны проектирования</h2>
+            <p>Singleton, Factory, Builder, Adapter, Decorator, Observer, Strategy и другие.</p>
+        </a>
+
+        <a href="pages/devtools.html" class="topic-card">
+            <span class="icon">🛠</span>
+            <h2>Инструменты: Логи, Maven, Gradle</h2>
+            <p>SLF4J/Logback, уровни логирования, Maven lifecycle, scope зависимостей, Gradle.</p>
+        </a>
+
+        <a href="pages/serialization.html" class="topic-card">
+            <span class="icon">📄</span>
+            <h2>Сериализация и Jackson</h2>
+            <p>ObjectMapper, аннотации Jackson, @JsonProperty, @JsonIgnore, DTO, Serializable.</p>
+        </a>
+
+                <a href="pages/linux.html" class="topic-card">
+            <span class="icon">🐧</span>
+            <h2>Linux для разработчика</h2>
+            <p>Базовые команды, навигация, grep, права, процессы, SSH, логи.</p>
+        </a>
+
+        <a href="pages/cicd.html" class="topic-card">
+            <span class="icon">🔄</span>
+            <h2>CI/CD</h2>
+            <p>Continuous Integration/Delivery, GitHub Actions, Jenkins, DevOps практики.</p>
+        </a>
+
+        <a href="pages/kotlin.html" class="topic-card">
+            <span class="icon">💜</span>
+            <h2>Kotlin для Java-разработчика</h2>
+            <p>Null safety, data class, extension functions, coroutines, совместимость с Java.</p>
+        </a>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Работает на телефоне · Без интернета · Обновляй по мере изучения 🚀</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

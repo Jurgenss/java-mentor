@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модификаторы доступа | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🔐 Модификаторы доступа в Java</h1>
+
+        <div class="note">Модификаторы определяют, откуда можно обратиться к полю, методу или классу. Всего их четыре.</div>
+
+        <!-- Таблица -->
+        <h2>Четыре модификатора</h2>
+        <table>
+            <tr><th>Модификатор</th><th>Видимость</th><th>Пример</th></tr>
+            <tr>
+                <td><code>private</code></td>
+                <td>Только внутри <b>своего класса</b></td>
+                <td><code>private int age;</code></td>
+            </tr>
+            <tr>
+                <td><code>default</code> (без слова)</td>
+                <td>Внутри <b>своего пакета</b></td>
+                <td><code>int age;</code> (просто без модификатора)</td>
+            </tr>
+            <tr>
+                <td><code>protected</code></td>
+                <td>Внутри пакета + <b>наследники</b> в любом пакете</td>
+                <td><code>protected int age;</code></td>
+            </tr>
+            <tr>
+                <td><code>public</code></td>
+                <td>Везде (любой класс)</td>
+                <td><code>public int age;</code></td>
+            </tr>
+        </table>
+
+        <p><b>Запоминалка:</b> "Private → Package → Protected → Public" — по возрастанию доступности.</p>
+
+        <div class="answer-block">
+            В Java четыре модификатора доступа: <code>private</code> (только внутри класса), <code>default</code> или package-private (внутри пакета), <code>protected</code> (пакет + наследники), <code>public</code> (везде). Чем меньше доступности, тем лучше инкапсуляция.
+        </div>
+
+        <!-- private -->
+        <h2>private — самый строгий</h2>
+        <p>Доступ только внутри того же класса. Основа инкапсуляции.</p>
+        <pre>public class Person {
+    private int age; // никто снаружи не видит
+
+    public Person(int age) {
+        this.age = age; // внутри класса — можно
+    }
+
+    private void secretMethod() {
+        System.out.println("Никто не узнает");
+    }
+
+    public int getAge() {
+        return age; // геттер — публичный доступ к приватному полю
+    }
+}
+
+// В другом классе:
+Person p = new Person(25);
+// p.age = 30;        // ❌ Ошибка! private
+// p.secretMethod();  // ❌ Ошибка! private
+int a = p.getAge();   // ✅ Через публичный геттер</pre>
+
+        <!-- default -->
+        <h2>default (package-private) — без слова</h2>
+        <p>Если не написал модификатор — это default. Видно только внутри того же пакета.</p>
+        <pre>// Файл: package com.example;
+public class User {
+    String name; // default — видно в com.example
+    int id;      // default
+}
+
+// Файл: package com.example; (тот же пакет)
+public class UserService {
+    void printUser(User u) {
+        System.out.println(u.name); // ✅ Видно — тот же пакет
+    }
+}
+
+// Файл: package com.other; (другой пакет)
+public class OtherService {
+    void printUser(User u) {
+        // System.out.println(u.name); // ❌ Не видно!
+    }
+}</pre>
+        <p><b>Важно:</b> default нельзя написать явно (<code>default int age;</code> — ошибка). Это ключевое слово для switch-блоков и default-методов в интерфейсах.</p>
+
+        <!-- protected -->
+        <h2>protected — пакет + наследники</h2>
+        <p>Видно в том же пакете + наследникам из любого пакета.</p>
+        <pre>// Файл: package com.parent;
+public class Parent {
+    protected String familyName = "Ивановы";
+
+    protected void familySecret() {
+        System.out.println("Семейный секрет");
+    }
+}
+
+// Файл: package com.child; (другой пакет!)
+public class Child extends Parent {
+    public void reveal() {
+        System.out.println(familyName); // ✅ Видно наследнику
+        familySecret();                 // ✅ Видно наследнику
+    }
+}
+
+// Файл: package com.other; (другой пакет, не наследник)
+public class Stranger {
+    void peek(Parent p) {
+        // p.familySecret(); // ❌ Не видно — другой пакет, не наследник
+    }
+}</pre>
+
+        <p><b>Нюанс:</b> <code>protected</code> в наследнике из другого пакета доступен <b>только через ссылку наследника</b>, не через ссылку родителя.</p>
+        <pre>public class Child extends Parent {
+    public void test() {
+        Child c = new Child();
+        c.familySecret(); // ✅ Через ссылку Child
+
+        Parent p = new Child();
+        // p.familySecret(); // ❌ Через ссылку Parent — не видно!
+    }
+}</pre>
+
+        <!-- public -->
+        <h2>public — полный доступ</h2>
+        <p>Видно отовсюду. Используй для API — методов, которые должны быть доступны всем.</p>
+        <pre>public class Calculator {
+    public int sum(int a, int b) { // доступен везде
+        return a + b;
+    }
+}</pre>
+
+        <!-- Сводная таблица -->
+        <h2>Сводная таблица</h2>
+        <table>
+            <tr><th>Модификатор</th><th>Тот же класс</th><th>Тот же пакет</th><th>Наследник (другой пакет)</th><th>Другой пакет</th></tr>
+            <tr><td><code>private</code></td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+            <tr><td><code>default</code></td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+            <tr><td><code>protected</code></td><td>✅</td><td>✅</td><td>✅*</td><td>❌</td></tr>
+            <tr><td><code>public</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+        </table>
+        <p><b>*</b> protected у наследника из другого пакета — только через ссылку наследника, не родителя.</p>
+
+        <!-- Модификаторы для классов -->
+        <h2>Модификаторы для классов</h2>
+        <p>Для внешнего класса — только <code>public</code> или <code>default</code>. <code>private</code> и <code>protected</code> — только для внутренних классов.</p>
+        <pre>public class Outer { }     // ✅ Видно везде
+class PackageOnly { }        // ✅ Только в этом пакете
+// private class Nope { }    // ❌ Нельзя для внешнего!
+// protected class Nope { }  // ❌ Нельзя для внешнего!
+
+public class Outer {
+    private class Inner { }  // ✅ Внутренний — можно private
+}</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Какой модификатор самый строгий?</li>
+            <li>Чем default отличается от protected?</li>
+            <li>Почему поле лучше делать private?</li>
+            <li>Можно ли написать <code>default int x;</code>?</li>
+            <li>В каком случае protected-метод не виден наследнику из другого пакета?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Модификаторы доступа</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Многопоточность | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🧵 Многопоточность в Java</h1>
+
+        <div class="note">Многопоточка — одна из самых сложных тем для джуна. Но базу спрашивают всегда: создание потоков, synchronized, volatile, wait/notify.</div>
+
+        <!-- Создание потоков -->
+        <h2>Способы создания потока</h2>
+        <table>
+            <tr><th>Способ</th><th>Пример</th><th>Когда</th></tr>
+            <tr>
+                <td><code>extends Thread</code></td>
+                <td><code>new MyThread().start();</code></td>
+                <td>Если не нужно наследовать другой класс</td>
+            </tr>
+            <tr>
+                <td><code>implements Runnable</code></td>
+                <td><code>new Thread(new MyRunnable()).start();</code></td>
+                <td>✅ Предпочтительно: разделяет задачу и поток</td>
+            </tr>
+        </table>
+
+        <pre>// Способ 1: extends Thread
+class MyThread extends Thread {
+    @Override
+    public void run() {
+        System.out.println("Поток: " + Thread.currentThread().getName());
+    }
+}
+new MyThread().start();
+
+// Способ 2: implements Runnable (лучше)
+class MyRunnable implements Runnable {
+    @Override
+    public void run() {
+        System.out.println("Поток: " + Thread.currentThread().getName());
+    }
+}
+new Thread(new MyRunnable()).start();
+
+// Способ 3: лямбда (Java 8+)
+new Thread(() -> System.out.println("Поток из лямбды")).start();</pre>
+
+        <div class="answer-block">
+            Поток можно создать двумя способами: унаследовать <code>Thread</code> или реализовать <code>Runnable</code>. <code>Runnable</code> предпочтительнее — класс может наследовать что-то ещё, а задачу можно передать в пул потоков. Запуск всегда через <code>start()</code>, не <code>run()</code>.
+        </div>
+
+        <!-- start vs run -->
+        <h2>start() vs run()</h2>
+        <table>
+            <tr><th></th><th><code>start()</code></th><th><code>run()</code></th></tr>
+            <tr><td>Новый поток</td><td>✅ Создаёт</td><td>❌ Нет, выполняется в текущем</td></tr>
+            <tr><td>Асинхронность</td><td>✅ Да</td><td>❌ Нет, синхронно</td></tr>
+            <tr><td>Повторный вызов</td><td>❌ <code>IllegalThreadStateException</code></td><td>✅ Можно сколько угодно</td></tr>
+        </table>
+
+        <pre>Thread thread = new Thread(() -> System.out.println("Привет из " + Thread.currentThread().getName()));
+
+thread.run();   // "Привет из main" — текущий поток!
+thread.start(); // "Привет из Thread-0" — новый поток!
+thread.start(); // ❌ IllegalThreadStateException!</pre>
+
+        <!-- Состояния потока -->
+        <h2>Состояния потока (жизненный цикл)</h2>
+        <pre>NEW → (start()) → RUNNABLE → (завершил run) → TERMINATED
+                   ↑   ↓
+              BLOCKED (ждёт монитор)
+              WAITING (ждёт notify)
+              TIMED_WAITING (sleep, wait(timeout))</pre>
+
+        <!-- synchronized -->
+        <h2>synchronized</h2>
+        <p>Гарантирует, что в блок кода одновременно зайдёт <b>только один поток</b>. Решает проблему race condition.</p>
+
+        <h3>Проблема (без synchronized):</h3>
+        <pre>class Counter {
+    int count = 0;
+
+    void increment() {
+        count++; // НЕ атомарно! Чтение → увеличение → запись
+    }
+}
+// 1000 потоков × 1000 вызовов → результат < 1 000 000!</pre>
+
+        <h3>Решение (с synchronized):</h3>
+        <pre>class Counter {
+    int count = 0;
+
+    synchronized void increment() {
+        count++; // теперь только один поток за раз
+    }
+}
+
+// Или через блок:
+void increment() {
+    synchronized (this) {
+        count++;
+    }
+}
+
+// Или через отдельный объект-монитор:
+private final Object lock = new Object();
+void increment() {
+    synchronized (lock) {
+        count++;
+    }
+}</pre>
+
+        <h3>Что даёт synchronized:</h3>
+        <ul>
+            <li><b>Атомарность</b> — операция выполняется целиком</li>
+            <li><b>Видимость</b> — изменения видны всем потокам</li>
+            <li><b>Блокировка</b> — остальные потоки ждут</li>
+        </ul>
+
+        <!-- volatile -->
+        <h2>volatile</h2>
+        <p>Гарантирует <b>только видимость</b>, но <b>не атомарность</b>. Переменная читается из основной памяти, не кешируется в потоке.</p>
+
+        <pre>class Flag {
+    volatile boolean running = true; // без volatile может не увидеть изменения!
+
+    void stop() {
+        running = false; // поток main меняет
+    }
+
+    void work() {
+        while (running) { // другой поток читает
+            // без volatile — может зависнуть навсегда!
+        }
+    }
+}</pre>
+
+        <h3>synchronized vs volatile:</h3>
+        <table>
+            <tr><th></th><th>synchronized</th><th>volatile</th></tr>
+            <tr><td>Видимость</td><td>✅</td><td>✅</td></tr>
+            <tr><td>Атомарность</td><td>✅</td><td>❌</td></tr>
+            <tr><td>Блокировка</td><td>✅ (ждёт)</td><td>❌ (нет)</td></tr>
+            <tr><td>Когда</td><td>Составные операции (count++)</td><td>Флаги, простое чтение/запись</td></tr>
+        </table>
+
+        <p><b>Важно:</b> <code>volatile int count; count++;</code> — <b>не работает!</b> Это три операции, нужен <code>synchronized</code> или <code>AtomicInteger</code>.</p>
+
+        <div class="answer-block">
+            <code>synchronized</code> даёт атомарность и видимость, блокирует других. <code>volatile</code> — только видимость, не блокирует. Для <code>count++</code> нужен <code>synchronized</code> или <code>AtomicInteger</code>. Для флагов достаточно <code>volatile</code>.
+        </div>
+
+        <!-- wait / notify -->
+        <h2>wait() / notify() / notifyAll()</h2>
+        <p>Методы класса <code>Object</code> для координации потоков. <b>Вызываются только внутри synchronized!</b></p>
+
+        <table>
+            <tr><th>Метод</th><th>Что делает</th></tr>
+            <tr><td><code>wait()</code></td><td>Усыпляет текущий поток и <b>освобождает монитор</b></td></tr>
+            <tr><td><code>notify()</code></td><td>Будит <b>один случайный</b> ждущий поток</td></tr>
+            <tr><td><code>notifyAll()</code></td><td>Будит <b>все</b> ждущие потоки</td></tr>
+        </table>
+
+        <pre>class Store {
+    private int item;
+    private boolean hasItem = false;
+
+    synchronized void put(int value) throws InterruptedException {
+        while (hasItem) {
+            wait(); // ждём, пока заберут товар
+        }
+        item = value;
+        hasItem = true;
+        System.out.println("Произвёл: " + value);
+        notify(); // будим потребителя
+    }
+
+    synchronized int get() throws InterruptedException {
+        while (!hasItem) {
+            wait(); // ждём, пока появится товар
+        }
+        hasItem = false;
+        System.out.println("Потребил: " + item);
+        notify(); // будим производителя
+        return item;
+    }
+}</pre>
+
+        <p><b>Важно:</b> <code>wait()</code> всегда в цикле <code>while</code>, а не в <code>if</code> — защита от ложных пробуждений (spurious wakeups).</p>
+
+        <!-- AtomicInteger -->
+        <h2>Atomic-классы (java.util.concurrent.atomic)</h2>
+        <p>Потокобезопасные обёртки для примитивов. Работают быстрее synchronized.</p>
+
+        <pre>AtomicInteger count = new AtomicInteger(0);
+count.incrementAndGet();      // ++count (атомарно)
+count.getAndIncrement();      // count++ (атомарно)
+count.addAndGet(10);          // count += 10
+count.compareAndSet(old, new); // CAS — если old, заменить на new</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Чем отличается создание потока через Thread от Runnable?</li>
+            <li>Что будет, если вызвать run() вместо start()?</li>
+            <li>В чём разница между synchronized и volatile?</li>
+            <li>Почему volatile не подходит для count++?</li>
+            <li>Почему wait() нужно вызывать в цикле while?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Многопоточность</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

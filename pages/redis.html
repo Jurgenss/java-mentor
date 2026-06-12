@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redis | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>📦 Redis</h1>
+
+        <div class="note">Redis — in-memory хранилище данных. Используется как кеш, брокер сообщений, хранилище сессий. Скорость — микросекунды.</div>
+
+        <!-- Что такое -->
+        <h2>Что такое Redis и зачем он нужен</h2>
+        <table>
+            <tr><th>Проблема</th><th>Без Redis</th><th>С Redis</th></tr>
+            <tr><td>Частые запросы к БД</td><td>Каждый раз SQL-запрос (10-50ms)</td><td>Данные в Redis (< 1ms)</td></tr>
+            <tr><td>Сессии пользователей</td><td>Хранятся в памяти сервера (пропадают при рестарте)</td><td>Хранятся в Redis (живут независимо)</td></tr>
+            <tr><td>Очереди задач</td><td>Нужен отдельный брокер</td><td>Redis Pub/Sub или List как очередь</td></tr>
+            <tr><td>Счётчики (лайки, просмотры)</td><td>UPDATE в БД — медленно</td><td>INCR в Redis — атомарно и быстро</td></tr>
+        </table>
+
+        <div class="answer-block">
+            Redis — это in-memory key-value хранилище. Все данные в оперативной памяти, поэтому операции выполняются за микросекунды. Используется как кеш (чтобы не ходить в БД), хранилище сессий, счётчики, Pub/Sub, очереди. Данные можно сохранять на диск (RDB/AOF).
+        </div>
+
+        <!-- Типы данных -->
+        <h2>Типы данных в Redis</h2>
+        <table>
+            <tr><th>Тип</th><th>Пример</th><th>Использование</th></tr>
+            <tr><td><b>String</b></td><td><code>SET key "value"</code></td><td>Кеш JSON, счётчики (INCR)</td></tr>
+            <tr><td><b>List</b></td><td><code>LPUSH queue "task1"</code></td><td>Очереди задач (LPUSH + RPOP)</td></tr>
+            <tr><td><b>Set</b></td><td><code>SADD tags "java" "spring"</code></td><td>Уникальные теги, общие друзья</td></tr>
+            <tr><td><b>Hash</b></td><td><code>HSET user:1 name "Ivan" age 25</code></td><td>Объекты (пользователь, товар)</td></tr>
+            <tr><td><b>Sorted Set</b></td><td><code>ZADD leaderboard 100 "player1"</code></td><td>Рейтинги, таблицы лидеров</td></tr>
+        </table>
+
+        <h3>Примеры команд:</h3>
+        <pre># String
+SET user:1 '{"name":"Иван","age":25}'
+GET user:1
+INCR page:views       # увеличить счётчик на 1
+
+# List (очередь)
+LPUSH tasks "email:1"  # добавить в начало
+RPOP tasks             # взять с конца (FIFO)
+
+# Set
+SADD friends:1 "user:2" "user:3"
+SINTER friends:1 friends:2  # общие друзья
+
+# Hash
+HSET user:1 name "Иван" age 25 email "ivan@mail.ru"
+HGET user:1 name      # "Иван"
+HGETALL user:1        # все поля
+
+# Sorted Set (рейтинг)
+ZADD leaderboard 1000 "player1" 500 "player2"
+ZREVRANGE leaderboard 0 9  # топ-10</pre>
+
+        <!-- Spring + Redis -->
+        <h2>Spring Boot + Redis</h2>
+        <h3>Зависимость:</h3>
+        <pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-data-redis&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre>
+
+        <h3>Настройка (application.properties):</h3>
+        <pre>spring.data.redis.host=localhost
+spring.data.redis.port=6379
+spring.cache.type=redis</pre>
+
+        <h3>Кеширование через @Cacheable:</h3>
+        <pre>@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository repo;
+
+    @Cacheable(value = "users", key = "#id")
+    public User findById(Long id) {
+        // Первый вызов — идёт в БД и сохраняет в Redis
+        // Второй вызов — берёт из Redis (без запроса в БД!)
+        return repo.findById(id).orElseThrow();
+    }
+
+    @CacheEvict(value = "users", key = "#id")
+    public void updateUser(Long id, UserDTO dto) {
+        // Обновляем БД и сбрасываем кеш
+    }
+
+    @CachePut(value = "users", key = "#result.id")
+    public User create(UserDTO dto) {
+        return repo.save(new User(dto));
+    }
+}</pre>
+
+        <h3>Cache Aside (ручное управление):</h3>
+        <pre>@Service
+public class UserService {
+
+    @Autowired
+    private RedisTemplate&lt;String, User&gt; redis;
+
+    public User findById(Long id) {
+        String key = "user:" + id;
+
+        // 1. Проверяем кеш
+        User cached = redis.opsForValue().get(key);
+        if (cached != null) return cached;
+
+        // 2. Кеша нет — идём в БД
+        User user = repo.findById(id).orElseThrow();
+
+        // 3. Кладём в кеш на 10 минут
+        redis.opsForValue().set(key, user, Duration.ofMinutes(10));
+
+        return user;
+    }
+}</pre>
+
+        <!-- TTL -->
+        <h2>TTL — время жизни ключа</h2>
+        <pre># Redis CLI
+SET temp:data "value"
+EXPIRE temp:data 60    # удалится через 60 секунд
+TTL temp:data          # посмотреть оставшееся время
+
+# Spring
+redis.opsForValue().set(key, value, Duration.ofMinutes(10));</pre>
+
+        <!-- Стратегии инвалидации -->
+        <h2>Стратегии инвалидации кеша</h2>
+        <table>
+            <tr><th>Стратегия</th><th>Описание</th><th>Когда</th></tr>
+            <tr><td><b>TTL (Time To Live)</b></td><td>Ключ живёт N секунд, потом удаляется</td><td>Данные, которые устаревают предсказуемо</td></tr>
+            <tr><td><b>Cache-Aside</b></td><td>Приложение само управляет: прочитал → положил, обновил → удалил</td><td>Самый частый паттерн</td></tr>
+            <tr><td><b>Write-Through</b></td><td>Пишем и в БД, и в кеш одновременно</td><td>Данные должны быть всегда актуальны</td></tr>
+            <tr><td><b>Write-Behind</b></td><td>Пишем в кеш, в БД — асинхронно потом</td><td>Высокая скорость записи</td></tr>
+        </table>
+
+        <!-- Проблемы -->
+        <h2>Три проблемы кеширования</h2>
+        <table>
+            <tr><th>Проблема</th><th>Описание</th><th>Решение</th></tr>
+            <tr><td><b>Cache Penetration</b></td><td>Запрашивают ключ, которого нет ни в кеше, ни в БД (DDoS)</td><td>Кешировать "пустые" значения с коротким TTL</td></tr>
+            <tr><td><b>Cache Breakdown</b></td><td>Горячий ключ истекает, и тысячи запросов летят в БД одновременно</td><td>Блокировка: только один поток идёт в БД, остальные ждут</td></tr>
+            <tr><td><b>Cache Avalanche</b></td><td>Много ключей истекают одновременно</td><td>Случайный разброс TTL (±10%)</td></tr>
+        </table>
+
+        <!-- Redis в Docker -->
+        <h2>Redis в Docker</h2>
+        <pre>docker run -d --name redis -p 6379:6379 redis:7-alpine</pre>
+
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Зачем нужен Redis? Какие задачи он решает?</li>
+            <li>Какие типы данных есть в Redis?</li>
+            <li>Что делает аннотация @Cacheable в Spring?</li>
+            <li>Что такое TTL и зачем он нужен?</li>
+            <li>Что такое Cache Avalanche и как его избежать?</li>
+        </ol>
+
+    </main>
+    <footer class="footer"><p>📱 Java Mentor · Redis</p></footer>
+    <script src="../js/script.js"></script>
+</body>
+</html>

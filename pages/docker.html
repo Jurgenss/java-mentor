@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🐳 Docker для Java-разработчика</h1>
+
+        <div class="note">Docker — это способ упаковать приложение со всеми зависимостями в контейнер. На джуна спросят: зачем нужен Docker, основные команды, Dockerfile, docker-compose.</div>
+
+        <!-- Зачем -->
+        <h2>Зачем нужен Docker</h2>
+        <p><b>Проблема:</b> "На моей машине работает, а на сервере — нет". Разные версии Java, разные ОС, разные настройки.</p>
+        <p><b>Решение:</b> Docker упаковывает приложение + все зависимости (JDK, библиотеки, настройки) в единый образ. Этот образ запускается одинаково везде: на твоём ноутбуке, на сервере, в облаке.</p>
+
+        <table>
+            <tr><th>Без Docker</th><th>С Docker</th></tr>
+            <tr><td>Установи JDK 17</td><td>Образ уже содержит JDK 17</td></tr>
+            <tr><td>Установи PostgreSQL</td><td>Контейнер с PostgreSQL за 1 команду</td></tr>
+            <tr><td>Настрой переменные окружения</td><td>Прописаны в Dockerfile/compose</td></tr>
+            <tr><td>"У меня не запускается"</td><td>"docker compose up" — и всё работает</td></tr>
+        </table>
+
+        <div class="answer-block">
+            Docker — это платформа для контейнеризации. Контейнер — изолированная среда с приложением и всеми зависимостями. В отличие от виртуальной машины, контейнеры используют ядро хостовой ОС и занимают меньше ресурсов. Образ (image) — шаблон, контейнер (container) — запущенный экземпляр образа.
+        </div>
+
+        <!-- Основные понятия -->
+        <h2>Образы и контейнеры</h2>
+        <table>
+            <tr><th>Понятие</th><th>Аналогия</th><th>Команда</th></tr>
+            <tr><td><b>Image (образ)</b></td><td>Класс в Java</td><td><code>docker build -t myapp .</code></td></tr>
+            <tr><td><b>Container (контейнер)</b></td><td>Экземпляр класса (new MyClass())</td><td><code>docker run myapp</code></td></tr>
+            <tr><td><b>Dockerfile</b></td><td>Исходный код класса</td><td>Файл с инструкциями сборки</td></tr>
+            <tr><td><b>Docker Hub</b></td><td>Maven Central для образов</td><td><code>docker pull postgres:17</code></td></tr>
+        </table>
+
+        <!-- Команды -->
+        <h2>Основные команды Docker</h2>
+        <table>
+            <tr><th>Команда</th><th>Что делает</th><th>Пример</th></tr>
+            <tr><td><code>docker build -t name .</code></td><td>Собрать образ из Dockerfile</td><td><code>docker build -t myapp:1.0 .</code></td></tr>
+            <tr><td><code>docker run image</code></td><td>Запустить контейнер</td><td><code>docker run -p 8080:8080 myapp</code></td></tr>
+            <tr><td><code>docker ps</code></td><td>Список запущенных контейнеров</td><td><code>docker ps</code></td></tr>
+            <tr><td><code>docker ps -a</code></td><td>Список всех контейнеров (включая остановленные)</td><td><code>docker ps -a</code></td></tr>
+            <tr><td><code>docker stop id</code></td><td>Остановить контейнер</td><td><code>docker stop abc123</code></td></tr>
+            <tr><td><code>docker rm id</code></td><td>Удалить контейнер</td><td><code>docker rm abc123</code></td></tr>
+            <tr><td><code>docker rmi image</code></td><td>Удалить образ</td><td><code>docker rmi myapp:1.0</code></td></tr>
+            <tr><td><code>docker images</code></td><td>Список образов</td><td><code>docker images</code></td></tr>
+            <tr><td><code>docker logs id</code></td><td>Посмотреть логи контейнера</td><td><code>docker logs -f abc123</code></td></tr>
+            <tr><td><code>docker exec -it id sh</code></td><td>Зайти внутрь контейнера</td><td><code>docker exec -it abc123 sh</code></td></tr>
+            <tr><td><code>docker compose up</code></td><td>Запустить все сервисы из compose.yml</td><td><code>docker compose up -d</code></td></tr>
+            <tr><td><code>docker compose down</code></td><td>Остановить и удалить все сервисы</td><td><code>docker compose down</code></td></tr>
+            <tr><td><code>docker pull image</code></td><td>Скачать образ из Docker Hub</td><td><code>docker pull openjdk:17</code></td></tr>
+        </table>
+
+        <h3>Флаги docker run:</h3>
+        <table>
+            <tr><th>Флаг</th><th>Что делает</th><th>Пример</th></tr>
+            <tr><td><code>-d</code></td><td>Запустить в фоне (detached)</td><td><code>docker run -d nginx</code></td></tr>
+            <tr><td><code>-p host:container</code></td><td>Пробросить порт</td><td><code>docker run -p 8080:8080 myapp</code></td></tr>
+            <tr><td><code>-v host:container</code></td><td>Пробросить том (volume)</td><td><code>docker run -v ./data:/app/data</code></td></tr>
+            <tr><td><code>-e VAR=value</code></td><td>Задать переменную окружения</td><td><code>docker run -e DB_URL=jdbc:...</code></td></tr>
+            <tr><td><code>--name name</code></td><td>Задать имя контейнера</td><td><code>docker run --name my-postgres postgres</code></td></tr>
+            <tr><td><code>--rm</code></td><td>Удалить контейнер после остановки</td><td><code>docker run --rm myapp</code></td></tr>
+        </table>
+
+        <!-- Dockerfile -->
+        <h2>Dockerfile для Spring Boot</h2>
+        <p><b>Dockerfile</b> — текстовый файл с инструкциями для сборки образа.</p>
+
+        <pre># Этап 1: сборка приложения
+FROM eclipse-temurin:17-jdk AS builder
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN ./mvnw package -DskipTests
+
+# Этап 2: финальный образ (только JAR)
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]</pre>
+
+        <h3>Инструкции Dockerfile:</h3>
+        <table>
+            <tr><th>Инструкция</th><th>Что делает</th></tr>
+            <tr><td><code>FROM image</code></td><td>Базовый образ (стартовая точка)</td></tr>
+            <tr><td><code>WORKDIR /path</code></td><td>Рабочая директория внутри контейнера</td></tr>
+            <tr><td><code>COPY src dst</code></td><td>Скопировать файлы с хоста в контейнер</td></tr>
+            <tr><td><code>RUN command</code></td><td>Выполнить команду при сборке образа</td></tr>
+            <tr><td><code>EXPOSE port</code></td><td>Объявить порт (документирование)</td></tr>
+            <tr><td><code>ENTRYPOINT [...]</code></td><td>Команда при запуске контейнера</td></tr>
+            <tr><td><code>ENV VAR=value</code></td><td>Задать переменную окружения</td></tr>
+        </table>
+
+        <!-- Multi-stage -->
+        <h2>Multi-stage build — два этапа</h2>
+        <p><b>Зачем:</b> на первом этапе собираем JAR (нужен JDK + Maven), на втором — только JRE + JAR. Итоговый образ в 5 раз меньше.</p>
+
+        <pre># Этап 1: сборка (JDK + Maven) — ~500 MB
+FROM maven:3.9-eclipse-temurin-17 AS builder
+WORKDIR /app
+COPY . .
+RUN mvn package -DskipTests
+
+# Этап 2: запуск (только JRE) — ~100 MB
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]</pre>
+
+        <!-- docker-compose -->
+        <h2>Docker Compose — запуск нескольких сервисов</h2>
+        <p><b>docker-compose.yml</b> описывает все сервисы приложения. Одна команда <code>docker compose up</code> — и запущены БД, приложение, Redis, Kafka.</p>
+
+        <pre>version: '3.8'
+
+services:
+  # PostgreSQL
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: bank
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Spring Boot приложение
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: secret
+    depends_on:
+      - postgres
+
+  # Redis для кеша
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:</pre>
+
+        <h3>Запуск:</h3>
+        <pre>docker compose up -d      # запустить всё в фоне
+docker compose ps         # статус сервисов
+docker compose logs -f app # логи приложения
+docker compose down       # остановить и удалить всё</pre>
+
+        <!-- Docker для БД -->
+        <h2>Docker для базы данных (без установки)</h2>
+        <p>Одна команда — и PostgreSQL готов к работе, не нужно ничего устанавливать:</p>
+
+        <pre>docker run -d \
+  --name my-postgres \
+  -e POSTGRES_DB=bank \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=secret \
+  -p 5432:5432 \
+  -v pgdata:/var/lib/postgresql/data \
+  postgres:17</pre>
+
+        <p>После этого в Java: <code>jdbc:postgresql://localhost:5432/bank</code> — работает!</p>
+
+        <!-- Практический пример -->
+        <h2>Практический пример: Spring Boot + PostgreSQL в Docker</h2>
+
+        <h3>Структура проекта:</h3>
+        <pre>myapp/
+├── src/
+├── pom.xml
+├── Dockerfile
+└── docker-compose.yml</pre>
+
+        <h3>Запуск с нуля:</h3>
+        <pre># 1. Клонировал проект
+git clone https://github.com/user/myapp.git
+cd myapp
+
+# 2. Запустил
+docker compose up -d
+
+# 3. Всё работает:
+# - PostgreSQL на порту 5432
+# - Приложение на порту 8080
+# - Таблицы созданы (если ddl-auto=update)
+# НЕ НУЖНО устанавливать ни Java, ни Maven, ни PostgreSQL!</pre>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Чем контейнер отличается от виртуальной машины?</li>
+            <li>Что такое Dockerfile и docker-compose.yml?</li>
+            <li>Зачем нужен multi-stage build?</li>
+            <li>Как пробросить порт из контейнера на хост?</li>
+            <li>Как запустить PostgreSQL одной командой без установки?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · Docker</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

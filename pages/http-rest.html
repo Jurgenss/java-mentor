@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP и REST | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🌐 HTTP и REST</h1>
+
+        <div class="note">HTTP — протокол, на котором построен весь веб. REST — архитектурный стиль для API. Спрашивают на каждом собесе на backend-джуна.</div>
+
+        <!-- HTTP методы -->
+        <h2>HTTP-методы</h2>
+        <table>
+            <tr><th>Метод</th><th>Действие</th><th>Идемпотентность</th><th>Тело запроса</th><th>Кеширование</th></tr>
+            <tr>
+                <td><code>GET</code></td>
+                <td>Получить данные</td>
+                <td>✅ Да</td>
+                <td>❌ Нет</td>
+                <td>✅ Да</td>
+            </tr>
+            <tr>
+                <td><code>POST</code></td>
+                <td>Создать новый ресурс</td>
+                <td>❌ Нет</td>
+                <td>✅ Да</td>
+                <td>❌ Обычно нет</td>
+            </tr>
+            <tr>
+                <td><code>PUT</code></td>
+                <td>Заменить ресурс целиком</td>
+                <td>✅ Да</td>
+                <td>✅ Да</td>
+                <td>❌ Нет</td>
+            </tr>
+            <tr>
+                <td><code>PATCH</code></td>
+                <td>Частично обновить</td>
+                <td>❌ Нет</td>
+                <td>✅ Да</td>
+                <td>❌ Нет</td>
+            </tr>
+            <tr>
+                <td><code>DELETE</code></td>
+                <td>Удалить ресурс</td>
+                <td>✅ Да</td>
+                <td>❌ Обычно нет</td>
+                <td>❌ Нет</td>
+            </tr>
+            <tr>
+                <td><code>HEAD</code></td>
+                <td>Как GET, но без тела ответа</td>
+                <td>✅ Да</td>
+                <td>❌ Нет</td>
+                <td>✅ Да</td>
+            </tr>
+            <tr>
+                <td><code>OPTIONS</code></td>
+                <td>Узнать поддерживаемые методы</td>
+                <td>✅ Да</td>
+                <td>❌ Нет</td>
+                <td>❌ Нет</td>
+            </tr>
+        </table>
+
+        <h3>Идемпотентность:</h3>
+        <p>Метод <b>идемпотентный</b>, если повторный вызов не меняет результат. Пример: сколько раз ни вызови <code>GET /users/1</code> — результат тот же. А <code>POST /users</code> при каждом вызове создаёт нового пользователя.</p>
+
+        <div class="answer-block">
+            Основные HTTP-методы: GET (получить), POST (создать), PUT (заменить), PATCH (частично обновить), DELETE (удалить). Идемпотентные: GET, PUT, DELETE (повторный вызов не меняет результат). Неидемпотентные: POST, PATCH.
+        </div>
+
+        <!-- Коды ответов -->
+        <h2>Коды ответов HTTP</h2>
+        <table>
+            <tr><th>Диапазон</th><th>Значение</th><th>Примеры</th></tr>
+            <tr>
+                <td><b>1xx</b></td>
+                <td>Информационные</td>
+                <td><code>100 Continue</code></td>
+            </tr>
+            <tr>
+                <td><b>2xx</b></td>
+                <td>Успех</td>
+                <td><code>200 OK</code>, <code>201 Created</code>, <code>204 No Content</code></td>
+            </tr>
+            <tr>
+                <td><b>3xx</b></td>
+                <td>Перенаправление</td>
+                <td><code>301 Moved Permanently</code>, <code>302 Found</code>, <code>304 Not Modified</code></td>
+            </tr>
+            <tr>
+                <td><b>4xx</b></td>
+                <td>Ошибка клиента</td>
+                <td><code>400 Bad Request</code>, <code>401 Unauthorized</code>, <code>403 Forbidden</code>, <code>404 Not Found</code>, <code>409 Conflict</code></td>
+            </tr>
+            <tr>
+                <td><b>5xx</b></td>
+                <td>Ошибка сервера</td>
+                <td><code>500 Internal Server Error</code>, <code>502 Bad Gateway</code>, <code>503 Service Unavailable</code></td>
+            </tr>
+        </table>
+
+        <h3>Самые частые коды:</h3>
+        <table>
+            <tr><th>Код</th><th>Когда</th><th>Пример</th></tr>
+            <tr><td><code>200 OK</code></td><td>Успешный GET, PUT, PATCH</td><td>Вернули данные</td></tr>
+            <tr><td><code>201 Created</code></td><td>Успешный POST — ресурс создан</td><td>Создали пользователя</td></tr>
+            <tr><td><code>204 No Content</code></td><td>Успешный DELETE (нечего возвращать)</td><td>Удалили — ответ пустой</td></tr>
+            <tr><td><code>400 Bad Request</code></td><td>Невалидные данные от клиента</td><td>Не прошло валидацию</td></tr>
+            <tr><td><code>401 Unauthorized</code></td><td>Не залогинен (нет токена)</td><td>Запрос без JWT</td></tr>
+            <tr><td><code>403 Forbidden</code></td><td>Нет прав (залогинен, но нельзя)</td><td>Юзер пытается удалить админа</td></tr>
+            <tr><td><code>404 Not Found</code></td><td>Ресурс не найден</td><td>Пользователь с таким id не существует</td></tr>
+            <tr><td><code>500 Internal Server Error</code></td><td>Ошибка на сервере</td><td>NullPointerException в коде</td></tr>
+        </table>
+
+        <!-- REST -->
+        <h2>REST — архитектурный стиль</h2>
+        <p><b>REST</b> (Representational State Transfer) — набор принципов для построения API.</p>
+
+        <h3>Принципы REST:</h3>
+        <ol>
+            <li><b>Клиент-сервер</b> — клиент и сервер независимы</li>
+            <li><b>Stateless</b> — каждый запрос содержит всю информацию, сервер не хранит состояние клиента</li>
+            <li><b>Кеширование</b> — ответы можно кешировать</li>
+            <li><b>Единый интерфейс</b> — ресурсы через URI, стандартные методы</li>
+            <li><b>Многослойность</b> — клиент не знает, общается с сервером или прокси</li>
+        </ol>
+
+        <h3>Правила именования REST API:</h3>
+        <pre>✅ Правильно:
+GET    /api/users          // получить всех пользователей
+GET    /api/users/123      // получить одного
+POST   /api/users          // создать
+PUT    /api/users/123      // обновить целиком
+PATCH  /api/users/123      // частично обновить
+DELETE /api/users/123      // удалить
+GET    /api/users/123/orders // заказы пользователя
+
+❌ Неправильно:
+GET    /api/getAllUsers    // глаголы в URL
+POST   /api/createUser     // глаголы
+GET    /api/users?id=123   // параметр вместо пути (для одиночного ресурса)</pre>
+
+        <!-- JSON -->
+        <h2>JSON — формат обмена данными</h2>
+        <pre>// Запрос (Request Body):
+POST /api/users
+Content-Type: application/json
+
+{
+    "name": "Иван",
+    "email": "ivan@example.com",
+    "age": 25
+}
+
+// Ответ (Response Body):
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+{
+    "id": 123,
+    "name": "Иван",
+    "email": "ivan@example.com",
+    "age": 25,
+    "createdAt": "2026-06-10T12:00:00Z"
+}</pre>
+
+        <!-- Spring REST -->
+        <h2>Создание REST API на Spring Boot</h2>
+        <pre>@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @GetMapping
+    public List&lt;User&gt; getAll() {
+        return userService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public User getById(@PathVariable Long id) {
+        return userService.findById(id);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public User create(@RequestBody @Valid User user) {
+        return userService.create(user);
+    }
+
+    @PutMapping("/{id}")
+    public User update(@PathVariable Long id, @RequestBody @Valid User user) {
+        return userService.update(id, user);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        userService.delete(id);
+    }
+}</pre>
+
+        <h3>Аннотации Spring для REST:</h3>
+        <table>
+            <tr><th>Аннотация</th><th>Что делает</th></tr>
+            <tr><td><code>@RestController</code></td><td>@Controller + @ResponseBody (возвращает JSON, не View)</td></tr>
+            <tr><td><code>@RequestMapping("/path")</code></td><td>Базовый путь для всех методов</td></tr>
+            <tr><td><code>@GetMapping</code></td><td>GET-запрос</td></tr>
+            <tr><td><code>@PostMapping</code></td><td>POST-запрос</td></tr>
+            <tr><td><code>@PutMapping</code></td><td>PUT-запрос</td></tr>
+            <tr><td><code>@PatchMapping</code></td><td>PATCH-запрос</td></tr>
+            <tr><td><code>@DeleteMapping</code></td><td>DELETE-запрос</td></tr>
+            <tr><td><code>@PathVariable</code></td><td>Извлечь переменную из URL: <code>/users/{id}</code></td></tr>
+            <tr><td><code>@RequestParam</code></td><td>Извлечь параметр запроса: <code>?page=1</code></td></tr>
+            <tr><td><code>@RequestBody</code></td><td>Тело запроса (JSON → Java-объект)</td></tr>
+            <tr><td><code>@ResponseStatus</code></td><td>Указать код ответа</td></tr>
+        </table>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Какие HTTP-методы идемпотентные, а какие нет?</li>
+            <li>В чём разница между PUT и PATCH?</li>
+            <li>Что означает код 201? А 401 vs 403?</li>
+            <li>Что значит Stateless в REST?</li>
+            <li>Как в Spring принять JSON из запроса и вернуть JSON в ответе?</li>
+        </ol>
+
+    </main>
+
+    <footer class="footer">
+        <p>📱 Java Mentor · HTTP и REST</p>
+    </footer>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>
