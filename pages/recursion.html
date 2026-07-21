@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рекурсия | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+
+    <main class="content-page">
+        <h1>🔄 Рекурсия в Java</h1>
+
+        <div class="note">Рекурсия — это когда метод вызывает сам себя. На собесе спросят: базовый случай, стек вызовов, StackOverflowError, когда применять.</div>
+
+        <!-- Что такое -->
+        <h2>Что такое рекурсия</h2>
+        <p>Рекурсивный метод решает задачу, сводя её к <b>меньшей версии самой себя</b>.</p>
+        <ul>
+            <li><b>Базовый случай</b> — условие остановки (иначе бесконечный цикл)</li>
+            <li><b>Рекурсивный случай</b> — вызов метода с уменьшенной задачей</li>
+        </ul>
+
+        <pre>// Простейший пример: факториал
+public static long factorial(int n) {
+    if (n <= 1) return 1;               // базовый случай
+    return n * factorial(n - 1);        // рекурсивный случай
+}</pre>
+
+        <div class="answer-block">
+            Рекурсия — метод вызывает сам себя с уменьшенной задачей. Обязательно нужен <b>базовый случай</b> для остановки. Без него — <code>StackOverflowError</code>. Каждый вызов создаёт новый фрейм в стеке, при глубокой рекурсии стек переполняется.
+        </div>
+
+        <!-- Стек вызовов -->
+        <h2>Как работает стек вызовов</h2>
+        <pre>factorial(3)
+  → factorial(2)
+      → factorial(1)  // базовый случай, возврат 1
+      ← 2 * 1 = 2
+  ← 3 * 2 = 6</pre>
+        <p>Каждый вызов "замирает" и ждёт результата от меньшего вызова. Память для всех промежуточных вызовов хранится в <b>стеке</b>.</p>
+
+        <!-- Классические задачи -->
+        <h2>Классические задачи на рекурсию</h2>
+
+        <h3>1. Числа Фибоначчи</h3>
+        <pre>public static long fib(int n) {
+    if (n <= 1) return n;               // базовый случай
+    return fib(n - 1) + fib(n - 2);     // два рекурсивных вызова
+}
+// fib(0)=0, fib(1)=1, fib(2)=1, fib(3)=2, fib(4)=3, fib(5)=5
+// ⚠ Чистая рекурсия — O(2^n), очень медленно для n > 40!</pre>
+
+        <h3>2. Ханойские башни</h3>
+        <pre>public static void hanoi(int n, char from, char inter, char to) {
+    if (n == 1) {
+        System.out.println("Disk 1 from " + from + " to " + to);
+    } else {
+        hanoi(n - 1, from, to, inter);
+        System.out.println("Disk " + n + " from " + from + " to " + to);
+        hanoi(n - 1, inter, from, to);
+    }
+}</pre>
+        <p>Перенести n дисков с from на to, используя inter как вспомогательный. Количество ходов: 2ⁿ - 1.</p>
+
+        <h3>3. Обход дерева (файловая система)</h3>
+        <pre>public static long getFolderSize(File folder) {
+    long size = 0;
+    for (File file : folder.listFiles()) {
+        if (file.isFile()) size += file.length();
+        else size += getFolderSize(file); // рекурсия для подпапки
+    }
+    return size;
+}</pre>
+        <p>Самое частое применение рекурсии в реальных проектах.</p>
+
+        <h3>4. Бинарный поиск (рекурсивно)</h3>
+        <pre>public static int binarySearch(int[] arr, int target, int left, int right) {
+    if (left > right) return -1;                    // не найдено
+    int mid = left + (right - left) / 2;
+    if (arr[mid] == target) return mid;
+    if (arr[mid] > target)
+        return binarySearch(arr, target, left, mid - 1);
+    else
+        return binarySearch(arr, target, mid + 1, right);
+}</pre>
+
+        <!-- Опасности -->
+        <h2>Опасности рекурсии</h2>
+
+        <h3>StackOverflowError</h3>
+        <p>Глубина стека JVM ограничена (~1-10 тыс. вызовов). Если рекурсия слишком глубокая — стек переполняется.</p>
+        <pre>// Плохо: вызовет StackOverflowError при глубоком дереве
+public void traverse(TreeNode node) {
+    if (node == null) return;
+    traverse(node.left);
+    traverse(node.right);
+}</pre>
+
+        <h3>Экспоненциальная сложность</h3>
+        <p>Пример: наивный Фибоначчи. Каждый вызов порождает два новых — дерево вызовов растёт лавинообразно.</p>
+
+        <h3>Решение проблем:</h3>
+        <table>
+            <tr><th>Проблема</th><th>Решение</th></tr>
+            <tr><td>Глубокая рекурсия</td><td>Цикл + явный стек (Stack/Deque)</td></tr>
+            <tr><td>Экспоненциальная сложность</td><td>Мемоизация (кеширование результатов)</td></tr>
+            <tr><td>Хвостовая рекурсия</td><td>Trampoline-паттерн (JVM не оптимизирует)</td></tr>
+        </table>
+
+        <h3>Мемоизация Фибоначчи:</h3>
+        <pre>private static Map&lt;Integer, Long&gt; memo = new HashMap&lt;&gt;();
+
+public static long fibMemo(int n) {
+    if (n <= 1) return n;
+    if (memo.containsKey(n)) return memo.get(n);
+    long result = fibMemo(n - 1) + fibMemo(n - 2);
+    memo.put(n, result);
+    return result;
+}
+// Теперь O(n) вместо O(2^n)!</pre>
+
+        <h3>Замена рекурсии на цикл со стеком:</h3>
+        <pre>// Было — рекурсия (может упасть)
+public long getFolderSize(File folder) { ... }
+
+// Стало — цикл + стек (безопасно)
+public long getFolderSizeIterative(File root) {
+    long size = 0;
+    Stack&lt;File&gt; stack = new Stack&lt;&gt;();
+    stack.push(root);
+    while (!stack.isEmpty()) {
+        File current = stack.pop();
+        for (File file : current.listFiles()) {
+            if (file.isFile()) size += file.length();
+            else stack.push(file);
+        }
+    }
+    return size;
+}</pre>
+
+        <!-- Когда применять -->
+        <h2>Когда применять рекурсию</h2>
+        <table>
+            <tr><th>✅ Подходит</th><th>❌ Не подходит</th></tr>
+            <tr><td>Деревья, графы (умеренная глубина)</td><td>Простые циклы (факториал, сумма)</td></tr>
+            <tr><td>Алгоритмы "разделяй и властвуй"</td><td>Глубина > 10 000</td></tr>
+            <tr><td>Парсинг (JSON, XML, выражения)</td><td>Критичная к производительности логика</td></tr>
+            <tr><td>Комбинаторные задачи (анаграммы, перестановки)</td><td>Обычные CRUD-операции</td></tr>
+        </table>
+
+        <!-- Проверь себя -->
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что такое базовый случай и зачем он нужен?</li>
+            <li>Что произойдёт, если рекурсия слишком глубокая?</li>
+            <li>Почему наивный Фибоначчи — это O(2^n)?</li>
+            <li>Как заменить рекурсию, если глубина неизвестна?</li>
+            <li>Где рекурсия реально применяется в разработке?</li>
+        </ol>
+
+    </main>
+    <footer class="footer">
+        <p>📱 Java Mentor · Рекурсия</p>
+    </footer>
+    <script src="../js/script.js"></script>
+</body>
+</html>
