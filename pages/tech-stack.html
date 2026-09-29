@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Stack Junior Java | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+    <main class="content-page">
+        <h1>🛠 Tech Stack Junior Java Developer</h1>
+        <div class="note">Полный стек технологий для трудоустройства. Что обязательно, что плюс, как всё связано в реальном проекте.</div>
+
+        <h2>🎯 Обязательный минимум (спросят 100%)</h2>
+        <table>
+            <tr><th>Категория</th><th>Технологии</th><th>Уровень</th></tr>
+            <tr><td><b>Язык</b></td><td>Java 17+, ООП, коллекции, Stream API, исключения, Generics, многопоточка</td><td>Уверенно</td></tr>
+            <tr><td><b>Сборка</b></td><td>Maven (или Gradle), структура pom.xml, scope зависимостей</td><td>Базово</td></tr>
+            <tr><td><b>VCS</b></td><td>Git: add/commit/push/pull, ветки, merge vs rebase</td><td>Уверенно</td></tr>
+            <tr><td><b>БД</b></td><td>SQL (SELECT, JOIN, GROUP BY), PostgreSQL/MySQL</td><td>Уверенно</td></tr>
+            <tr><td><b>Доступ к БД</b></td><td>JDBC, JPA/Hibernate, Spring Data JPA</td><td>Понимать + писать</td></tr>
+            <tr><td><b>Spring</b></td><td>Core (IoC/DI), Boot, MVC, Data JPA</td><td>Уверенно</td></tr>
+            <tr><td><b>API</b></td><td>REST, HTTP методы, коды ответов, JSON</td><td>Уверенно</td></tr>
+            <tr><td><b>Тесты</b></td><td>JUnit 5, Mockito (unit-тесты)</td><td>Базово</td></tr>
+            <tr><td><b>Инструменты</b></td><td>IntelliJ IDEA, Postman, DBeaver/pgAdmin</td><td>Уверенно</td></tr>
+            <tr><td><b>ОС</b></td><td>Linux: навигация, grep, tail, ps, ssh</td><td>Базово</td></tr>
+        </table>
+
+        <h2>🚀 Плюсы к резюме (выделяют среди джунов)</h2>
+        <table>
+            <tr><th>Технология</th><th>Зачем</th></tr>
+            <tr><td><b>Spring Security + JWT</b></td><td>Аутентификация/авторизация в любом проекте</td></tr>
+            <tr><td><b>Docker + Compose</b></td><td>Контейнеризация, запуск проекта одной командой</td></tr>
+            <tr><td><b>Redis</b></td><td>Кеширование, сессии, счётчики</td></tr>
+            <tr><td><b>Kafka / RabbitMQ</b></td><td>Асинхронное общение сервисов</td></tr>
+            <tr><td><b>CI/CD (GitHub Actions)</b></td><td>Автосборка, тесты, деплой</td></tr>
+            <tr><td><b>Микросервисы (Spring Cloud)</b></td><td>Eureka, Feign, Gateway</td></tr>
+            <tr><td><b>Lombok</b></td><td>Сокращение boilerplate-кода</td></tr>
+            <tr><td><b>Swagger / OpenAPI</b></td><td>Документация REST API</td></tr>
+            <tr><td><b>Flyway / Liquibase</b></td><td>Миграции БД</td></tr>
+            <tr><td><b>Testcontainers</b></td><td>Интеграционные тесты с реальной БД в Docker</td></tr>
+        </table>
+
+        <h2>🔗 Как всё связано в реальном проекте</h2>
+        <pre>Клиент (браузер, мобилка)
+        ↓ HTTP/JSON
+   Spring MVC (@RestController)
+        ↓
+   Service Layer (@Service, @Transactional)
+        ↓               ↓
+ Spring Data JPA    Redis (кеш)
+        ↓
+   Hibernate
+        ↓ JDBC
+   PostgreSQL
+        ↓
+   Flyway (миграции)
+
+Async:
+ Service → Kafka → другой сервис/consumer
+
+Инфра:
+ Docker Compose (app + postgres + redis + kafka)
+ CI/CD (GitHub Actions): push → test → build → deploy</pre>
+
+        <h2>📅 Порядок изучения (роадмап)</h2>
+        <table>
+            <tr><th>Этап</th><th>Что учить</th><th>Время</th></tr>
+            <tr><td>1. База</td><td>Java Core, ООП, коллекции, Stream, исключения, Generics</td><td>1-2 мес</td></tr>
+            <tr><td>2. Инструменты</td><td>Git, Maven, JUnit, IntelliJ</td><td>2 недели</td></tr>
+            <tr><td>3. БД</td><td>SQL, JDBC, PostgreSQL</td><td>2-3 недели</td></tr>
+            <tr><td>4. Spring</td><td>Core, Boot, MVC, Data JPA, Hibernate</td><td>1 мес</td></tr>
+            <tr><td>5. Продвинутое</td><td>Security, JWT, Docker, Redis</td><td>3-4 недели</td></tr>
+            <tr><td>6. Плюсы</td><td>Kafka, микросервисы, CI/CD</td><td>по мере</td></tr>
+            <tr><td>7. Алгоритмы</td><td>LeetCode Easy (2-3 задачи в день)</td><td>параллельно всегда</td></tr>
+        </table>
+
+        <h2>💼 Что писать в резюме джуну</h2>
+        <pre>Стек: Java 17, Spring Boot, Spring MVC, Spring Data JPA,
+Hibernate, PostgreSQL, Maven, Git, Docker, JUnit 5, Mockito
+
+Проекты:
+1. REST API для [домена] — Spring Boot + PostgreSQL + JWT + Docker
+2. [Учебный проект] — JDBC + транзакции + PostgreSQL
+3. Algorithms — реализация сортировок, связных списков, рекурсии
+
+Дополнительно: Linux, Redis, Kafka (базово), GitHub Actions</pre>
+
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Что обязательно знать джуну из Spring?</li>
+            <li>Что такое scope зависимостей в Maven?</li>
+            <li>Зачем нужен Docker в проекте?</li>
+            <li>Как связаны JPA и Hibernate?</li>
+            <li>Что писать в резюме, если нет коммерческого опыта?</li>
+        </ol>
+    </main>
+    <footer class="footer"><p>📱 Java Mentor · Tech Stack</p></footer>
+    <script src="../js/script.js"></script>
+</body>
+</html>

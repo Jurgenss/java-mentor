@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Память JVM: Stack и Heap | Java Mentor</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <a href="../index.html" class="btn btn-back">← На главную</a>
+    <main class="content-page">
+        <h1>🧠 Память JVM: Stack и Heap</h1>
+        <div class="note">На собесе спросят: где хранятся переменные, что такое стек и куча, чем отличаются, что такое GC.</div>
+
+        <h2>Структура памяти JVM</h2>
+        <pre>┌─────────────────────────────────────┐
+│           JVM Memory                │
+├─────────────────────────────────────┤
+│  Stack (для каждого потока свой)    │ ← локальные переменные, примитивы, ссылки
+├─────────────────────────────────────┤
+│  Heap (общая для всех)              │ ← объекты, массивы, строки
+│  ├── Young Generation               │
+│  │   ├── Eden                       │
+│  │   └── Survivor (S0, S1)          │
+│  └── Old Generation (Tenured)       │
+├─────────────────────────────────────┤
+│  Metaspace (Java 8+)                │ ← метаданные классов, статика
+├─────────────────────────────────────┤
+│  PC Register, Native Stack          │ ← счётчик команд, нативные вызовы
+└─────────────────────────────────────┘</pre>
+
+        <h2>Stack vs Heap</h2>
+        <table>
+            <tr><th></th><th>Stack</th><th>Heap</th></tr>
+            <tr><td>Что хранится</td><td>Локальные переменные, примитивы, ссылки</td><td>Объекты, массивы</td></tr>
+            <tr><td>Размер</td><td>Маленький (обычно 512KB - 1MB на поток)</td><td>Большой (до GB)</td></tr>
+            <tr><td>Скорость</td><td>⚡ Очень быстрая</td><td>🐢 Медленнее</td></tr>
+            <tr><td>Область</td><td>Для каждого потока своя</td><td>Общая для всех потоков</td></tr>
+            <tr><td>Очистка</td><td>Автоматически при выходе из метода</td><td>Garbage Collector</td></tr>
+            <tr><td>Ошибки</td><td><code>StackOverflowError</code></td><td><code>OutOfMemoryError</code></td></tr>
+        </table>
+
+        <div class="answer-block">
+            <b>Stack</b> — область памяти для локальных переменных и ссылок, у каждого потока своя. Быстрая, очищается автоматически при выходе из метода. <b>Heap</b> — общая область для объектов, очищается Garbage Collector. Ссылки хранятся в Stack, а сами объекты — в Heap.
+        </div>
+
+        <h2>Пример: где что лежит</h2>
+        <pre>public void example() {
+    int x = 10;                    // примитив x → в Stack
+    String s = "Hello";            // ссылка s → в Stack, объект "Hello" → в Heap (String Pool)
+    User user = new User("Иван");  // ссылка user → в Stack, объект User → в Heap
+}</pre>
+        <pre>STACK                          HEAP
+┌──────────────┐               ┌──────────────────┐
+│ x = 10       │               │ "Hello" (pool)   │
+│ s  ──────────┼──────────────>│                  │
+│ user ────────┼──┐            │ User{name="Иван"}│
+└──────────────┘  └───────────>│                  │
+                               └──────────────────┘</pre>
+
+        <h2>Стек вызовов методов</h2>
+        <pre>main() → methodA() → methodB()
+
+STACK (растёт вниз):
+┌─────────────────┐
+│ main: args      │
+│ methodA: x=5    │
+│ methodB: y=10   │ ← текущий фрейм (вершина)
+└─────────────────┘
+Каждый вызов создаёт фрейм. Возврат — фрейм удаляется (LIFO).</pre>
+
+        <h2>Heap: Young vs Old Generation</h2>
+        <p>Heap делится на два поколения — это оптимизация для GC.</p>
+        <pre>Young Generation (маленькая, частая очистка)
+├── Eden — новые объекты
+├── Survivor S0
+└── Survivor S1
+
+Old (Tenured) Generation (большая, редкая очистка)
+└── объекты, пережившие несколько сборок</pre>
+
+        <h3>Как работает сборка мусора (упрощённо):</h3>
+        <ol>
+            <li>Новые объекты → Eden</li>
+            <li>Eden заполнился → Minor GC: живые объекты → Survivor S0</li>
+            <li>Ещё раз заполнился → живые → S1 (старые → Old Gen)</li>
+            <li>Old Gen заполнился → Major GC (Full GC): медленный, останавливает мир (Stop-the-World)</li>
+        </ol>
+
+        <h2>Garbage Collector — как определить мусор</h2>
+        <p>GC удаляет объекты, на которые <b>нет ссылок</b> из Stack или других живых объектов.</p>
+        <pre>// Объект становится мусором, когда ссылка на него потеряна
+User user = new User("Иван");
+user = null;   // объект User теперь недостижим → GC удалит</pre>
+
+        <h3>Типы GC в Java:</h3>
+        <table>
+            <tr><th>GC</th><th>Особенности</th></tr>
+            <tr><td><b>Serial GC</b></td><td>Однопоточный, для маленьких приложений</td></tr>
+            <tr><td><b>Parallel GC</b></td><td>Многопоточный, дефолт в Java 8</td></tr>
+            <tr><td><b>G1 GC</b></td><td>Дефолт в Java 9+, баланс скорость/паузы</td></tr>
+            <tr><td><b>ZGC / Shenandoah</b></td><td>Низкие паузы (< 10ms), для больших heap</td></tr>
+        </table>
+
+        <h2>Что такое Metaspace</h2>
+        <p>До Java 8 была область <b>PermGen</b> (фиксированный размер). С Java 8+ — <b>Metaspace</b> (растёт динамически).</p>
+        <ul>
+            <li>Хранит метаданные классов, методов, статические поля</li>
+            <li>Не участвует в обычном GC (только при выгрузке классов)</li>
+        </ul>
+
+        <h2>Типичные ошибки памяти</h2>
+        <table>
+            <tr><th>Ошибка</th><th>Причина</th><th>Решение</th></tr>
+            <tr><td><code>StackOverflowError</code></td><td>Слишком глубокая рекурсия / бесконечный вызов</td><td>Увеличить <code>-Xss</code> или переписать на цикл</td></tr>
+            <tr><td><code>OutOfMemoryError: Java heap space</code></td><td>Мало heap или утечка</td><td>Увеличить <code>-Xmx</code> или найти утечку</td></tr>
+            <tr><td><code>OutOfMemoryError: Metaspace</code></td><td>Много загруженных классов (динамические прокси)</td><td>Увеличить Metaspace или ограничить создание классов</td></tr>
+            <tr><td><b>Утечка памяти (Memory Leak)</b></td><td>Ссылки на ненужные объекты живут долго</td><td>Профилировщики (JVisualVM, JProfiler)</td></tr>
+        </table>
+
+        <h3>Пример утечки:</h3>
+        <pre>// Плохо — статическая коллекция никогда не очищается
+public class Cache {
+    private static List&lt;Object&gt; list = new ArrayList&lt;&gt;();
+    public static void add(Object o) { list.add(o); } // GC не соберёт!
+}
+
+// Хорошо — WeakReference или ограниченный размер
+private static Map&lt;Key, Value&gt; cache = new WeakHashMap&lt;&gt;();</pre>
+
+        <h2>Флаги JVM для памяти</h2>
+        <pre>java -Xms512m -Xmx2g -Xss1m MyApp
+
+-Xms512m  — начальный размер heap (start)
+-Xmx2g    — максимальный размер heap
+-Xss1m    — размер стека одного потока
+-XX:+UseG1GC — использовать G1 GC</pre>
+
+        <h2>✅ Проверь себя</h2>
+        <ol>
+            <li>Где хранятся локальные переменные и объекты?</li>
+            <li>Чем Stack отличается от Heap?</li>
+            <li>Что произойдёт при переполнении стека? А кучи?</li>
+            <li>Как GC определяет, что объект — мусор?</li>
+            <li>Что такое Stop-the-World пауза?</li>
+            <li>Что такое утечка памяти и как её найти?</li>
+        </ol>
+    </main>
+    <footer class="footer"><p>📱 Java Mentor · Память JVM</p></footer>
+    <script src="../js/script.js"></script>
+</body>
+</html>
